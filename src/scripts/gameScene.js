@@ -4,7 +4,7 @@ class GameScene extends Scene {
     constructor() {
         super('scene-game');
 
-        this.textbox = GameObjects.Text || undefined;
+        this.textbox = null;
     }
   
     create() {

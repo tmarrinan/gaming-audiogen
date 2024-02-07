@@ -10,7 +10,7 @@ let phaser = {
     game: null
 }
 
-onMounted(async () => {
+onMounted(() => {
     phaser.canvas = document.getElementById('canvas');
 
     const config = {
