@@ -15,8 +15,8 @@ onMounted(() => {
 
     const config = {
         type: WEBGL,
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: 1024,
+        height: 576,
         canvas: phaser.canvas,
         physics: {
             default: 'arcade',
@@ -45,7 +45,7 @@ onMounted(() => {
 
 #canvas {
     display: block;
-    width: 100vw;
-    height: 100vh;
+    width: 1024px;
+    height: 576px;
 }
 </style>
