@@ -10,11 +10,7 @@
     "vue": "^3.4.15"
   },
   "devDependencies": {
-    "@babylonjs/core": "^6.41.0",
-    "@babylonjs/gui": "^6.41.0",
-    "@babylonjs/inspector": "^6.41.0",
-    "@babylonjs/loaders": "^6.41.0",
-    "@babylonjs/materials": "^6.41.0",
+    "phaser": "^3.70.0",
     "@vitejs/plugin-vue": "^5.0.3",
     "vite": "^5.0.12"
   }
