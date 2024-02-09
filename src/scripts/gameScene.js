@@ -5,72 +5,41 @@ class GameScene extends Scene {
         super('scene-game');
 
         this.canvas = null;
-        this.environments = {
-            forest: {
-                ground_color: '#4B2F0B',
-                sky_color: '#69A9C9'
-            },
-            cave: {
-                ground_color: '#707070',
-                sky_color: '#202020'
-            }
-        }
+        this.map = null;
+        this.map_layer = null;
 
-        // test
-        this.textbox = null;
-        this.ground = [ // 16 tiles wide
-            {height: 0, type: 'forest'},
-            {height: 1, type: 'forest'},
-            {height: 2, type: 'forest'},
-            {height: 2, type: 'forest'},
-            {height: 1, type: 'forest'},
-            {height: 0, type: 'forest'},
-            {height: 0, type: 'cave'},
-            {height: 0, type: 'cave'},
-            {height: 0, type: 'cave'},
-            {height: 0, type: 'cave'},
-            {height: 0, type: 'forest'},
-            {height: 0, type: 'forest'},
-            {height: 0, type: 'forest'},
-            {height: 0, type: 'forest'},
-            {height: 0, type: 'forest'},
-            {height: 0, type: 'forest'}
+        // level (+1 for sky, +2 for ground)
+        //  0: cave
+        // 12: forest
+        // 24: beach
+        // 36: grass
+        this.level = [ // 16 x 9
+            [25, 25, 25, 25, 32, 37, 37, 37, 43, 13, 13, 13, 18, 1, 1, 1],
+            [25, 25, 25, 25, 32, 37, 37, 37, 43, 13, 13, 13, 18, 1, 1, 1],
+            [25, 25, 25, 25, 32, 37, 37, 37, 43, 13, 13, 13, 18, 1, 1, 1],
+            [25, 25, 25, 25, 32, 36, 36, 37, 43, 13, 13, 13, 18, 1, 1, 1],
+            [25, 25, 24, 24, 29, 38, 38, 36, 43, 13, 13, 13, 18, 1, 1, 1],
+            [24, 24, 26, 26, 35, 38, 38, 38, 40, 13, 13, 13, 18, 1, 1, 1],
+            [26, 26, 26, 26, 35, 38, 38, 38, 46, 12, 12, 13, 18, 1, 1, 1],
+            [26, 26, 26, 26, 35, 38, 38, 38, 46, 14, 14, 12, 15, 1, 1, 0],
+            [26, 26, 26, 26, 35, 38, 38, 38, 46, 14, 14, 14, 21, 0, 0, 2],
         ];
     }
 
     preload() {
         this.canvas = this.sys.game.canvas;
 
-        this.load.image('forest', 'assets/forest-ground.png');
-        this.load.image('cave', 'assets/cave-ground.png');
+        this.load.image('tilemap', 'assets/tilemap-gradient.png');
     }
   
     create() {
-        this.textbox = this.add.text(
-            this.canvas.width / 2,
-            this.canvas.height / 2,
-            'Welcome to Phaser x Vite!',
-            {
-                color: '#FFFFFF',
-                fontFamily: 'monospace',
-                fontSize: '26px'
-            }
-        );
-    
-        this.textbox.setOrigin(0.5, 0.5);
-
-        this.ground.forEach((item, index) => {
-            let ground_tile = this.add.image(64 * index, this.canvas.height - ((item.height + 1) * 64), item.type);
-            ground_tile.setOrigin(0, 0);
-        });
+        this.map = this.make.tilemap({data: this.level, tileWidth: 64, tileHeight: 64});
+        const tiles = this.map.addTilesetImage('tilemap');
+        this.map_layer = this.map.createLayer(0, tiles, 0, 0);
     }
 
     update(time, delta) {
-        if (!this.textbox) {
-            return;
-        }
-    
-        this.textbox.rotation += 0.0005 * delta;
+        // animation
     }
 };
 
