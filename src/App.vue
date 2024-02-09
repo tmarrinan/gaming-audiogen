@@ -1,7 +1,7 @@
 <script setup>
 import { Game, WEBGL } from 'phaser';
 import { reactive, ref, onMounted } from 'vue';
-import { GameScene } from './scripts/gameScene.js';
+import { GameScene } from './scripts/gameScene';
 
 const BASE_URL = import.meta.env.BASE_URL || '/';
 
@@ -21,8 +21,8 @@ onMounted(() => {
         physics: {
             default: 'arcade',
             arcade: {
-                gravity: { y: 0 },
-                // debug: true
+                gravity: { y: 300 },
+                debug: false
             }
         },
         scene: [
