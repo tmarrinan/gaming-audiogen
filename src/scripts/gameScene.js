@@ -133,7 +133,7 @@ class GameScene extends Scene {
         this.animations = [];
         this.textbox_bg = null
         this.textbox = null;
-        this.winner = {bg: null, text: null};
+        this.done_overlay = {bg: null, text: null};
     }
 
     preload() {
@@ -146,6 +146,9 @@ class GameScene extends Scene {
     create() {
         // Game not over
         this.finished = false;
+
+        // Disable collisions with bottom
+        this.physics.world.checkCollision.down = false;
 
         // Initialize keyboard input
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -201,21 +204,21 @@ class GameScene extends Scene {
         this.physics.add.overlap(this.player, this.goal, this.goalReached, null, this);
 
         // Text (win / game over)
-        this.winner.bg = this.add.rectangle(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height, 0x282828, 1.0);
-        this.winner.bg.visible = false;
+        this.done_overlay.bg = this.add.rectangle(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height, 0x282828, 1.0);
+        this.done_overlay.bg.visible = false;
         const font = {
             color: '#FFFFFF',
             fontFamily: 'monospace',
             fontSize: '64px'
         };
-        this.winner.text = this.add.text(this.canvas.width / 2, this.canvas.height / 2, '', font);
-        this.winner.text.setOrigin(0.5, 0.5);
-        this.winner.text.visible = false;
+        this.done_overlay.text = this.add.text(this.canvas.width / 2, this.canvas.height / 2, '', font);
+        this.done_overlay.text.setOrigin(0.5, 0.5);
+        this.done_overlay.text.visible = false;
 
-        this.winner.fade = this.add.tween({
+        this.done_overlay.fade = this.add.tween({
             targets: [
-                this.winner.bg,
-                this.winner.text
+                this.done_overlay.bg,
+                this.done_overlay.text
             ],
             duration: 1000,
             alpha: {
@@ -255,6 +258,11 @@ class GameScene extends Scene {
             if (this.cursors.space.isDown && this.player.body.touching.down) {
                 this.player.setVelocityY(-450);
             }
+
+            // Game over
+            if (this.player.y > this.canvas.height) {
+                this.gameOver();
+            }
         }
     }
 
@@ -281,8 +289,8 @@ class GameScene extends Scene {
 
         this.player.destroy();
 
-        this.winner.bg.destroy();
-        this.winner.text.destroy();
+        this.done_overlay.bg.destroy();
+        this.done_overlay.text.destroy();
 
         // Restart
         this.scene.restart();
@@ -306,17 +314,34 @@ class GameScene extends Scene {
     goalReached() {
         if (!this.finished) {
             this.finished = true;
-            console.log('Made it! Finshed level: ' + this.current_level);
+            console.log('Made it! Finshed level: ' + (this.current_level + 1));
 
             this.player.setVelocityX(0);
             this.player.setVelocityY(0);
             this.player.anims.play('turn');
 
-            this.winner.text.text = 'Winner!';
-            this.winner.fade.play();
+            this.done_overlay.text.style.color = '#FFFFFF';
+            this.done_overlay.text.text = 'Winner!';
+            this.done_overlay.fade.play();
             setTimeout(() => {
-                this.winner.bg.visible = true;
-                this.winner.text.visible = true;
+                this.done_overlay.bg.visible = true;
+                this.done_overlay.text.visible = true;
+            }, 50);
+        }
+    }
+
+    gameOver() {
+        if (!this.finished) {
+            this.finished = true;
+            console.log('Game over! Failed level: ' + (this.current_level + 1));
+
+            this.done_overlay.text.style.color = '#A8231F';
+            this.done_overlay.text.text = 'Game Over!';
+            console.log(this.done_overlay.text.style.color);
+            this.done_overlay.fade.play();
+            setTimeout(() => {
+                this.done_overlay.bg.visible = true;
+                this.done_overlay.text.visible = true;
             }, 50);
         }
     }
