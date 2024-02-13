@@ -56,6 +56,63 @@ const levels = [
             {x: 928, y: 128, w: 64, h: 32, color: 0x595c57}
         ],
         goal: {x: 992, y: 64}
+    },
+    {
+        background: [
+            0x0E0E0E,
+            0x101010,
+            0x121212,
+            0x141414,
+            0x161616,
+            0x181818,
+            0x1A1A1A,
+            0x1C1C1C,
+            0x421F1A,
+            0x381105,
+            0x703F23,
+            0x381105,
+            0x1C1C1C,
+            0x1A1A1A
+        ],
+        platforms: [
+            // ground
+            {x: 0, y: 0, w: '45%', h: 64, color: 0xE2E2E2},
+            {x: '55%', y: 0, w: '45%', h: 64, color: 0xE2E2E2},
+            // skull
+            {x: 352, y: 416, w: 32, h: 96, color: 0xE2E2E2},
+            {x: 640, y: 416, w: 32, h: 96, color: 0xE2E2E2},
+            {x: 384, y: 512, w: 256, h: 32, color: 0xE2E2E2},
+            {x: 424, y: 192, w: 32, h: 128, color: 0xE2E2E2},
+            {x: 496, y: 192, w: 32, h: 128, color: 0xE2E2E2},
+            {x: 568, y: 192, w: 32, h: 128, color: 0xE2E2E2},
+            {x: 416, y: 384, w: 64, h: 32, color: 0xE2E2E2},
+            {x: 416, y: 448, w: 64, h: 32, color: 0xE2E2E2},
+            {x: 432, y: 416, w: 32, h: 32, color: 0xE2E2E2},
+            {x: 544, y: 384, w: 64, h: 32, color: 0xE2E2E2},
+            {x: 544, y: 448, w: 64, h: 32, color: 0xE2E2E2},
+            {x: 560, y: 416, w: 32, h: 32, color: 0xE2E2E2},
+            // rocks
+            {x: 288, y: 224, w: 32, h: 32, color: 0xE2E2E2},
+            // stalactites (on cieling)
+            {x: 0, y: 544, w: '100%', h: 32, color: 0xE2E2E2},
+            {x: 800, y: 512, w: 32, h: 32, color: 0xE2E2E2},
+            {x: 832, y: 416, w: 32, h: 128, color: 0xE2E2E2},
+            {x: 864, y: 480, w: 32, h: 64, color: 0xE2E2E2},
+            // stalagmites (on ground)
+            {x: 128, y: 64, w: 32, h: 64, color: 0xE2E2E2},
+            {x: 160, y: 64, w: 32, h: 128, color: 0xE2E2E2},
+            {x: 192, y: 64, w: 32, h: 32, color: 0xE2E2E2},
+            // torches
+            {x: 0, y: 64, w: 32, h: 64, color: 0x592E04},
+            {x: 0, y: 128, w: 32, h: 32, color: 0xDEA035},
+            {x: 384, y: 64, w: 32, h: 64, color: 0x592E04},
+            {x: 384, y: 128, w: 32, h: 32, color: 0xDEA035},
+            {x: 608, y: 64, w: 32, h: 64, color: 0x592E04},
+            {x: 608, y: 128, w: 32, h: 32, color: 0xDEA035},
+            {x: 896, y: 64, w: 32, h: 64, color: 0x592E04},
+            {x: 896, y: 128, w: 32, h: 32, color: 0xDEA035},
+        ],
+        goal: {x: 960, y: 64}
     }
 ]
 
@@ -66,6 +123,7 @@ class GameScene extends Scene {
         this.current_level = 0;
 
         this.canvas = null;
+        this.finished = false;
         this.cursors = null;
         this.graphics = null;
         this.platforms = null;
@@ -73,7 +131,9 @@ class GameScene extends Scene {
         this.goal = null;
         this.player = null;
         this.animations = [];
+        this.textbox_bg = null
         this.textbox = null;
+        this.winner = {bg: null, text: null};
     }
 
     preload() {
@@ -84,6 +144,9 @@ class GameScene extends Scene {
     }
   
     create() {
+        // Game not over
+        this.finished = false;
+
         // Initialize keyboard input
         this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -106,9 +169,11 @@ class GameScene extends Scene {
         // Create goal
         let goal_pos = levels[this.current_level].goal;
         this.goal = this.physics.add.staticImage(goal_pos.x + 16, this.canvas.height - (goal_pos.y + 32), 'goal', 0);
+        this.goal.setSize(2, 2);
 
         // Create player
         this.player = this.physics.add.sprite(100, 475, 'dude');
+        this.player.setSize(24, 48);
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
 
@@ -136,32 +201,60 @@ class GameScene extends Scene {
         this.physics.add.overlap(this.player, this.goal, this.goalReached, null, this);
 
         // Text (win / game over)
+        this.winner.bg = this.add.rectangle(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width, this.canvas.height, 0x282828, 1.0);
+        this.winner.bg.visible = false;
         const font = {
             color: '#FFFFFF',
             fontFamily: 'monospace',
             fontSize: '64px'
         };
-        this.textbox = this.add.text(this.canvas.width / 2, this.canvas.height / 2, '', font);
-        this.textbox.setOrigin(0.5, 0.5);
-        this.textbox.visible = false;
+        this.winner.text = this.add.text(this.canvas.width / 2, this.canvas.height / 2, '', font);
+        this.winner.text.setOrigin(0.5, 0.5);
+        this.winner.text.visible = false;
+
+        this.winner.fade = this.add.tween({
+            targets: [
+                this.winner.bg,
+                this.winner.text
+            ],
+            duration: 1000,
+            alpha: {
+                getStart: () => { return 0.0; },
+                getEnd: () => { return 0.95; },
+            },
+            repeat: 0,
+            paused: true
+        });
     }
 
     update(time, delta) {
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-160);
-            this.player.anims.play('left', true);
-        }
-        else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(160);
-            this.player.anims.play('right', true);
-        }
-        else {
-            this.player.setVelocityX(0);
-            this.player.anims.play('turn');
-        }
+        if (!this.finished) {
+            let time_s = time / 1000;
 
-        if (this.cursors.space.isDown && this.player.body.touching.down) {
-            this.player.setVelocityY(-450);
+            // Goal animation
+            let goal_pos = levels[this.current_level].goal;
+            let x = (goal_pos.x + 16) + (2 * Math.cos(time_s * 2 * Math.PI));
+            let y = (this.canvas.height - (goal_pos.y + 32)) + (2 * Math.sin(time_s * 2 * Math.PI));
+            this.goal.x = x;
+            this.goal.y = y;
+
+            // Player - keyboard controls
+            if (this.cursors.left.isDown) {
+                this.player.setVelocityX(-160);
+                this.player.anims.play('left', true);
+            }
+            else if (this.cursors.right.isDown) {
+                this.player.setVelocityX(160);
+                this.player.anims.play('right', true);
+            }
+            else {
+                this.player.setVelocityX(0);
+                this.player.anims.play('turn');
+            }
+
+            if (this.cursors.space.isDown && this.player.body.touching.down) {
+                this.player.setVelocityY(-450);
+            }
         }
     }
 
@@ -179,10 +272,17 @@ class GameScene extends Scene {
         
         this.platforms.destroy();
 
+        this.goal.destroy();
+
         for (let animation of this.animations) {
             animation.destroy();
         }
         this.animations = [];
+
+        this.player.destroy();
+
+        this.winner.bg.destroy();
+        this.winner.text.destroy();
 
         // Restart
         this.scene.restart();
@@ -204,9 +304,21 @@ class GameScene extends Scene {
     }
 
     goalReached() {
-        this.textbox.text = 'Winner!';
-        this.textbox.visible = true;
-        console.log('made it! Finshed level: ' + this.current_level);
+        if (!this.finished) {
+            this.finished = true;
+            console.log('Made it! Finshed level: ' + this.current_level);
+
+            this.player.setVelocityX(0);
+            this.player.setVelocityY(0);
+            this.player.anims.play('turn');
+
+            this.winner.text.text = 'Winner!';
+            this.winner.fade.play();
+            setTimeout(() => {
+                this.winner.bg.visible = true;
+                this.winner.text.visible = true;
+            }, 50);
+        }
     }
 };
 
