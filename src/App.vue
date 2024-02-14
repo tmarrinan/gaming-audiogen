@@ -51,6 +51,12 @@ function updateGradientColorCount(event) {
             app_state.gradient_colors.push('#FFFFFF');
         }
     }
+
+    phaser.scene.setEditorBackground(app_state.gradient_colors);
+}
+
+function updateGradient() {
+    phaser.scene.setEditorBackground(app_state.gradient_colors);
 }
 
 function backgroundGradientCSS() {
@@ -117,7 +123,7 @@ onMounted(() => {
                     <div class="widget-row" v-for="(color, i) in app_state.gradient_colors">
                         <div class="indent"></div>
                         <label>Color {{ i }}:</label>
-                        <input type="color" v-model="app_state.gradient_colors[i]" />
+                        <input type="color" v-model="app_state.gradient_colors[i]" @change="updateGradient" />
                     </div>
                 </div>
             </div>

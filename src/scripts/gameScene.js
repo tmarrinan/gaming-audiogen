@@ -268,6 +268,14 @@ class GameScene extends Scene {
             }, 50);
         }
     }
+
+    setEditorBackground(background) {
+        this.editor.background = [];
+        background.forEach((color) => {
+            this.editor.background.push(parseInt(color.substring(1), 16));
+        });
+        this.redrawGradient(this.editor.background);
+    }
 };
 
 export { GameScene };
