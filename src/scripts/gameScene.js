@@ -4,7 +4,6 @@ import { Scene } from 'phaser';
 import Level1 from './level1';
 import Level2 from './level2';
 import Level3 from './level3';
-import Level4 from './level4';
 
 
 class GameScene extends Scene {
@@ -12,6 +11,7 @@ class GameScene extends Scene {
         super(config);
 
         this.current_level = 0;
+        this.mode = 'game';
 
         this.canvas = null;
         this.finished = false;
@@ -19,7 +19,6 @@ class GameScene extends Scene {
             Level1,
             Level2,
             Level3,
-            Level4,
             null
         ];
         this.cursors = null;
@@ -32,6 +31,13 @@ class GameScene extends Scene {
         this.textbox_bg = null
         this.textbox = null;
         this.done_overlay = {bg: null, text: null};
+
+        this.editor = {
+            background: [
+                0xFFFFFF,
+                0x000000
+            ]
+        }
     }
 
     preload() {
@@ -53,7 +59,7 @@ class GameScene extends Scene {
 
         // Create background graphics (gradient)
         this.graphics = this.add.graphics();
-        this.redrawGradient();
+        this.redrawGradient(this.levels[this.current_level].background);
 
         // Create platforms
         this.levels[this.current_level].platforms.forEach((p) => {
@@ -129,7 +135,7 @@ class GameScene extends Scene {
     }
 
     update(time, delta) {
-        if (!this.finished) {
+        if (this.mode === 'game' && !this.finished) {
             let time_s = time / 1000;
 
             // Goal animation
@@ -162,13 +168,37 @@ class GameScene extends Scene {
                 this.gameOver();
             }
         }
+        else if (this.mode === 'editor') {
+
+        }
+    }
+
+    launchEditor() {
+        this.mode = 'editor';
+        this.clearAssets();
+
+        this.graphics = this.add.graphics();
+        this.redrawGradient(this.editor.background);
     }
 
     restart(level) {
-        // Set level
-        this.current_level = level;
+        if (this.levels[level] !== null) {
+            // Set level
+            this.mode = 'game';
+            this.current_level = level;
 
-        // Clear old level assets
+            // Clear old level assets
+            this.clearAssets();
+
+            // Restart
+            this.scene.restart();
+        }
+        else {
+            alert('Error: level not created');
+        }
+    }
+
+    clearAssets() {
         this.graphics.destroy();
 
         for (let platform of this.platform_gameobjects) {
@@ -189,15 +219,11 @@ class GameScene extends Scene {
 
         this.done_overlay.bg.destroy();
         this.done_overlay.text.destroy();
-
-        // Restart
-        this.scene.restart();
     }
 
-    redrawGradient() {
+    redrawGradient(background) {
         this.graphics.clear();
         let start_color, end_color, start_y;
-        let background = this.levels[this.current_level].background;
         let num_sections = background.length - 1;
         let section_height = this.canvas.height / num_sections;
         for (let i = 0; i < num_sections; i++) {
