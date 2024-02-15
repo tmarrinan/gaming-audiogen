@@ -1,4 +1,4 @@
-import { Scene } from 'phaser';
+import { Scene, Geom } from 'phaser';
 
 // Levels - note: player jump apporx 96 high
 import Level1 from './level1';
@@ -36,7 +36,9 @@ class GameScene extends Scene {
             background: [
                 0xFFFFFF,
                 0x000000
-            ]
+            ],
+            goal_pos: {x: 0, y: 0},
+            selected: null
         }
     }
 
@@ -56,6 +58,11 @@ class GameScene extends Scene {
 
         // Initialize keyboard input
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.input.on('pointerdown', this.onPointerDown, this);
+        this.input.on('pointerup', () => {
+            this.editor.selected = null;
+        });
+        this.input.on('pointermove', this.onPointerMove, this);
 
         // Create background graphics (gradient)
         this.graphics = this.add.graphics();
@@ -169,16 +176,42 @@ class GameScene extends Scene {
             }
         }
         else if (this.mode === 'editor') {
-
+            
         }
     }
 
-    launchEditor() {
+    launchEditor(goal_grid) {
         this.mode = 'editor';
         this.clearAssets();
 
         this.graphics = this.add.graphics();
         this.redrawGradient(this.editor.background);
+
+        this.editor.goal_pos.x = goal_grid.x * 8;
+        this.editor.goal_pos.y = goal_grid.y * 8;
+        this.goal = this.add.image(this.editor.goal_pos.x + 16, this.canvas.height - (this.editor.goal_pos.y + 32), 'goal', 0);
+    }
+
+    onPointerDown(pointer) {
+        if (this.mode === 'editor') {
+            if (this.goal.getBounds().contains(pointer.x, pointer.y)) {
+                this.editor.selected = 'goal';
+            }
+            else {
+                // check if selecting existing platform
+
+                // create new platform
+            }
+        }
+    }
+
+    onPointerMove(pointer) {
+        if (this.mode === 'editor' && this.editor.selected !== null) {
+            if (this.editor.selected === 'goal') {
+                this.goal.x = (Math.round(pointer.x / 8)) * 8;
+                this.goal.y = (Math.round(pointer.y / 8)) * 8;
+            }
+        }
     }
 
     restart(level) {

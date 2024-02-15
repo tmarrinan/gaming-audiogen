@@ -16,7 +16,9 @@ let app_state = reactive({
     gradient_colors: [
         '#000000',
         '#FFFFFF'
-    ]
+    ],
+    platforms: [],
+    goal: {x: 64, y: 36}
 });
 
 function onGameLoaded(data) {
@@ -25,14 +27,22 @@ function onGameLoaded(data) {
 
 function selectLevel(level) {
     if (phaser.scene !== null) {
+        app_state.edit_mode = false;
         phaser.scene.restart(level);
     }
 }
 
 function editGame() {
     if (phaser.scene !== null) {
-        phaser.scene.launchEditor();
         app_state.edit_mode = true;
+        app_state.gradient_colors = [
+            '#000000',
+            '#FFFFFF'
+        ];
+        app_state.platforms = [];
+        app_state.goal = {x: 64, y: 36};
+
+        phaser.scene.launchEditor(app_state.goal);
     }
 }
 
@@ -159,6 +169,7 @@ input {
     display: block;
     width: 1024px;
     height: 576px;
+    border: solid 1px #000000;;
 }
 
 #ui {
