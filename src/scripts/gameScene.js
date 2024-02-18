@@ -1,4 +1,4 @@
-import { Scene, Geom } from 'phaser';
+import { Scene } from 'phaser';
 
 // Levels - note: player jump apporx 96 high
 import Level1 from './level1';
@@ -38,6 +38,7 @@ class GameScene extends Scene {
                 0x000000
             ],
             goal_pos: {x: 0, y: 0},
+            platform_gameobjects: [],
             selected: null
         }
     }
@@ -45,6 +46,7 @@ class GameScene extends Scene {
     preload() {
         this.canvas = this.sys.game.canvas;
         this.load.image('platform', 'assets/platform-ninepatch.png');
+        this.load.image('selection', 'assets/selection-ninepatch.png');
         this.load.image('goal', 'assets/goal.png');
         this.load.spritesheet('dude', 'assets/dude.png', {frameWidth: 32, frameHeight: 48});
     }
@@ -59,9 +61,7 @@ class GameScene extends Scene {
         // Initialize keyboard input
         this.cursors = this.input.keyboard.createCursorKeys();
         this.input.on('pointerdown', this.onPointerDown, this);
-        this.input.on('pointerup', () => {
-            this.editor.selected = null;
-        });
+        this.input.on('pointerup', this.onPointerUp, this);
         this.input.on('pointermove', this.onPointerMove, this);
 
         // Create background graphics (gradient)
@@ -195,21 +195,105 @@ class GameScene extends Scene {
     onPointerDown(pointer) {
         if (this.mode === 'editor') {
             if (this.goal.getBounds().contains(pointer.x, pointer.y)) {
-                this.editor.selected = 'goal';
+                this.editor.selected = {
+                    type: 'goal',
+                    game_object: this.goal,
+                    highlight: null,
+                    offset: {x: pointer.x - this.goal.x, y: pointer.y - this.goal.y},
+                    init_position: {
+                        left: this.goal.x - (this.goal.width / 2), 
+                        top: this.goal.y - (this.goal.height / 2)
+                    }
+                };
             }
             else {
                 // check if selecting existing platform
-
-                // create new platform
+                let selected_platform = null;
+                this.editor.platform_gameobjects.forEach((platform_go) => {
+                    if (platform_go.getBounds().contains(pointer.x, pointer.y)) {
+                        selected_platform = platform_go;
+                    }
+                });
+                if (selected_platform !== null) {
+                    this.editor.selected = {
+                        type: 'platform',
+                        game_object: selected_platform,
+                        highlight: this.add.nineslice(selected_platform.x, selected_platform.y, 'selection', 0,
+                                                      selected_platform.width + 8, selected_platform.height + 8, 4, 4, 4, 4),
+                        offset: {x: pointer.x - selected_platform.x, y: pointer.y - selected_platform.y},
+                        init_position: {
+                            left: selected_platform.x - (selected_platform.width / 2),
+                            top: selected_platform.y - selected_platform.height / 2
+                        }
+                    };
+                }
+                else { // create new platform
+                    let x = (Math.floor(pointer.x / 8)) * 8;
+                    let y = (Math.floor(pointer.y / 8)) * 8;
+                    let new_platform = this.add.nineslice(x + 16, y + 16, 'platform', 0, 32, 32, 14, 14, 14, 14);
+                    this.editor.platform_gameobjects.push(new_platform);
+                    let selection = this.add.nineslice(x + 16, y + 16, 'selection', 0, 40, 40, 4, 4, 4 ,4);
+                    this.editor.selected = {
+                        type: 'new-platform',
+                        game_object: new_platform,
+                        highlight: selection,
+                        offset: {x: pointer.x - new_platform.x, y: pointer.y - new_platform.y},
+                        init_position: {left: new_platform.x - 16, top: new_platform.y - 16}
+                    };
+                }
             }
+        }
+    }
+
+    onPointerUp(pointer) {
+        if (this.editor.selected !== null) {
+            if (this.editor.selected.highlight !== null) {
+                this.editor.selected.highlight.destroy();
+            }
+            this.editor.selected = null;
         }
     }
 
     onPointerMove(pointer) {
         if (this.mode === 'editor' && this.editor.selected !== null) {
-            if (this.editor.selected === 'goal') {
-                this.goal.x = (Math.round(pointer.x / 8)) * 8;
-                this.goal.y = (Math.round(pointer.y / 8)) * 8;
+            if (this.editor.selected.type === 'goal' || this.editor.selected.type === 'platform') {
+                this.editor.selected.game_object.x = (Math.round((pointer.x - this.editor.selected.offset.x) / 8)) * 8;
+                this.editor.selected.game_object.y = (Math.round((pointer.y - this.editor.selected.offset.y) / 8)) * 8;
+                if (this.editor.selected.highlight !== null) {
+                    this.editor.selected.highlight.x = this.editor.selected.game_object.x;
+                    this.editor.selected.highlight.y = this.editor.selected.game_object.y;
+                }
+            }
+            else if (this.editor.selected.type === 'new-platform') {
+                let start_x, start_y, end_x, end_y;
+                if (pointer.x >= this.editor.selected.init_position.left) {
+                    start_x = this.editor.selected.init_position.left;
+                    end_x = (Math.ceil(pointer.x / 8)) * 8;
+                }
+                else {
+                    start_x = (Math.floor(pointer.x / 8)) * 8;
+                    end_x = this.editor.selected.init_position.left + 32;
+                }
+                if (pointer.y >= this.editor.selected.init_position.top) {
+                    start_y = this.editor.selected.init_position.top;
+                    end_y = (Math.ceil(pointer.y / 8)) * 8;
+                }
+                else {
+                    start_y = (Math.floor(pointer.y / 8)) * 8;
+                    end_y = this.editor.selected.init_position.top + 32;
+                }
+
+                let new_width = Math.max(end_x - start_x, 32);
+                let new_height = Math.max(end_y - start_y, 32);
+                this.editor.selected.game_object.x = start_x + (new_width / 2);
+                this.editor.selected.game_object.y = start_y + (new_height / 2);
+                this.editor.selected.game_object.width = new_width;
+                this.editor.selected.game_object.height = new_height;
+
+                this.editor.selected.highlight.x = this.editor.selected.game_object.x;
+                this.editor.selected.highlight.y = this.editor.selected.game_object.y;
+                this.editor.selected.highlight.width = new_width + 8;
+                this.editor.selected.highlight.height = new_height + 8;
             }
         }
     }
