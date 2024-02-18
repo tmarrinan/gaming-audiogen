@@ -39,7 +39,9 @@ class GameScene extends Scene {
             ],
             goal_pos: {x: 0, y: 0},
             platform_gameobjects: [],
-            selected: null
+            selected: null,
+            prev_selected: null,
+            change_callback: null
         }
     }
 
@@ -180,6 +182,10 @@ class GameScene extends Scene {
         }
     }
 
+    setEditorChangeCallback(editor_change_callback) {
+        this.editor.change_callback = editor_change_callback;
+    }
+
     launchEditor(goal_grid) {
         this.mode = 'editor';
         this.clearAssets();
@@ -203,15 +209,18 @@ class GameScene extends Scene {
                     init_position: {
                         left: this.goal.x - (this.goal.width / 2), 
                         top: this.goal.y - (this.goal.height / 2)
-                    }
+                    },
+                    index: -1
                 };
             }
             else {
                 // check if selecting existing platform
                 let selected_platform = null;
-                this.editor.platform_gameobjects.forEach((platform_go) => {
+                let selected_index = -1;
+                this.editor.platform_gameobjects.forEach((platform_go, index) => {
                     if (platform_go.getBounds().contains(pointer.x, pointer.y)) {
                         selected_platform = platform_go;
+                        selected_index = index;
                     }
                 });
                 if (selected_platform !== null) {
@@ -224,7 +233,8 @@ class GameScene extends Scene {
                         init_position: {
                             left: selected_platform.x - (selected_platform.width / 2),
                             top: selected_platform.y - selected_platform.height / 2
-                        }
+                        },
+                        index: selected_index
                     };
                 }
                 else { // create new platform
@@ -238,7 +248,8 @@ class GameScene extends Scene {
                         game_object: new_platform,
                         highlight: selection,
                         offset: {x: pointer.x - new_platform.x, y: pointer.y - new_platform.y},
-                        init_position: {left: new_platform.x - 16, top: new_platform.y - 16}
+                        init_position: {left: new_platform.x - 16, top: new_platform.y - 16},
+                        index: this.editor.platform_gameobjects.length - 1
                     };
                 }
             }
@@ -250,7 +261,12 @@ class GameScene extends Scene {
             if (this.editor.selected.highlight !== null) {
                 this.editor.selected.highlight.destroy();
             }
+            this.editor.prev_selected = this.editor.selected.index;
             this.editor.selected = null;
+
+            if (this.editor.change_callback !== null) {
+                this.editor.change_callback(this.editor.prev_selected);
+            }
         }
     }
 

@@ -21,8 +21,15 @@ let app_state = reactive({
     goal: {x: 64, y: 36}
 });
 
+function onEditorChange(platform_idx) {
+    console.log(platform_idx);
+    // TODO: add GUI for selecting platform color and for deleting platform
+    //       if idx < 0, then no platform to edit
+}
+
 function onGameLoaded(data) {
     phaser.scene = phaser.game.scene.scenes[0];
+    phaser.scene.setEditorChangeCallback(onEditorChange)
 }
 
 function selectLevel(level) {
