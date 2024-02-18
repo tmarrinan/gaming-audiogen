@@ -30,7 +30,6 @@ function onEditorChange(data) {
     //       if idx < 0, then no platform to edit
     app_state.selected_platform.index = data.index;
     app_state.selected_platform.color = '#' + data.color.toString(16).padStart(6, '0');
-    console.log(app_state.selected_platform);
 }
 
 function onGameLoaded(data) {
@@ -88,6 +87,10 @@ function updatePlatformColor() {
 
 function deletePlatform() {
     phaser.scene.removeEditorPlatform(app_state.selected_platform.index);
+}
+
+function saveCustomLevel() {
+    phaser.scene.saveCustomLevel();
 }
 
 function backgroundGradientCSS() {
@@ -160,6 +163,9 @@ onMounted(() => {
                         <label>Plartform:</label>
                         <input type="color" v-model="app_state.selected_platform.color" @change="updatePlatformColor" />
                         <button type="button" @click="deletePlatform">Remove</button>
+                    </div>
+                    <div class="widget-row">
+                        <button type="button" @click="saveCustomLevel">Save</button>
                     </div>
                 </div>
             </div>

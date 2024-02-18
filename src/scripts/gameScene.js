@@ -189,6 +189,7 @@ class GameScene extends Scene {
     launchEditor(goal_grid) {
         this.mode = 'editor';
         this.clearAssets();
+        this.resetEditor();
 
         this.graphics = this.add.graphics();
         this.redrawGradient(this.editor.background);
@@ -358,6 +359,17 @@ class GameScene extends Scene {
         this.done_overlay.text.destroy();
     }
 
+    resetEditor() {
+        this.editor.background = [
+            0xFFFFFF,
+            0x000000
+        ];
+        this.editor.goal_pos = {x: 0, y: 0};
+        this.editor.platform_gameobjects = [];
+        this.editor.selected = null;
+        this.editor.prev_selected = null;
+    }
+
     redrawGradient(background) {
         this.graphics.clear();
         let start_color, end_color, start_y;
@@ -421,6 +433,27 @@ class GameScene extends Scene {
     removeEditorPlatform(index) {
         this.editor.platform_gameobjects[index].destroy();
         this.editor.platform_gameobjects.splice(index, 1);
+    }
+
+    saveCustomLevel() {
+        this.levels[3] = {
+            background: [],
+            platforms: [],
+            goal: {x: this.goal.x - 16, y: this.canvas.height - (this.goal.y + 32)}
+        };
+
+        this.editor.background.forEach((value) => {
+            this.levels[3].background.push(value);
+        });
+        this.editor.platform_gameobjects.forEach((platform) => {
+            this.levels[3].platforms.push({
+                x: platform.x - (platform.width / 2),
+                y: this.canvas.height - (platform.y + (platform.height / 2)),
+                w: platform.width,
+                h: platform.height,
+                color: platform.tint
+            });
+        });
     }
 };
 
