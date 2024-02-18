@@ -196,6 +196,7 @@ class GameScene extends Scene {
         this.editor.goal_pos.x = goal_grid.x * 8;
         this.editor.goal_pos.y = goal_grid.y * 8;
         this.goal = this.add.image(this.editor.goal_pos.x + 16, this.canvas.height - (this.editor.goal_pos.y + 32), 'goal', 0);
+        this.goal.depth = 500;
     }
 
     onPointerDown(pointer) {
@@ -261,7 +262,10 @@ class GameScene extends Scene {
             if (this.editor.selected.highlight !== null) {
                 this.editor.selected.highlight.destroy();
             }
-            this.editor.prev_selected = this.editor.selected.index;
+            this.editor.prev_selected = {
+                index: this.editor.selected.index,
+                color: this.editor.selected.game_object.tint
+            };
             this.editor.selected = null;
 
             if (this.editor.change_callback !== null) {
@@ -408,6 +412,15 @@ class GameScene extends Scene {
             this.editor.background.push(parseInt(color.substring(1), 16));
         });
         this.redrawGradient(this.editor.background);
+    }
+
+    setEditorPlatformColor(index, color) {
+        this.editor.platform_gameobjects[index].tint = parseInt(color.substring(1), 16);
+    }
+
+    removeEditorPlatform(index) {
+        this.editor.platform_gameobjects[index].destroy();
+        this.editor.platform_gameobjects.splice(index, 1);
     }
 };
 

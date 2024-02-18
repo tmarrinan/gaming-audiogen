@@ -18,13 +18,19 @@ let app_state = reactive({
         '#FFFFFF'
     ],
     platforms: [],
-    goal: {x: 64, y: 36}
+    goal: {x: 64, y: 36},
+    selected_platform: {
+        index: -1,
+        color: '#FFFFFF'
+    }
 });
 
-function onEditorChange(platform_idx) {
-    console.log(platform_idx);
+function onEditorChange(data) {
     // TODO: add GUI for selecting platform color and for deleting platform
     //       if idx < 0, then no platform to edit
+    app_state.selected_platform.index = data.index;
+    app_state.selected_platform.color = '#' + data.color.toString(16).padStart(6, '0');
+    console.log(app_state.selected_platform);
 }
 
 function onGameLoaded(data) {
@@ -74,6 +80,14 @@ function updateGradientColorCount(event) {
 
 function updateGradient() {
     phaser.scene.setEditorBackground(app_state.gradient_colors);
+}
+
+function updatePlatformColor() {
+    phaser.scene.setEditorPlatformColor(app_state.selected_platform.index, app_state.selected_platform.color);
+}
+
+function deletePlatform() {
+    phaser.scene.removeEditorPlatform(app_state.selected_platform.index);
 }
 
 function backgroundGradientCSS() {
@@ -142,6 +156,11 @@ onMounted(() => {
                         <label>Color {{ i }}:</label>
                         <input type="color" v-model="app_state.gradient_colors[i]" @change="updateGradient" />
                     </div>
+                    <div class="widget-row" v-if="app_state.selected_platform.index >= 0">
+                        <label>Plartform:</label>
+                        <input type="color" v-model="app_state.selected_platform.color" @change="updatePlatformColor" />
+                        <button type="button" @click="deletePlatform">Remove</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -160,11 +179,11 @@ h3 {
 
 label {
     font-size: 1rem;
-    margin: 0 1rem 0 0;
+    margin: 0;
 }
 
-input {
-    margin: 0;
+input, button {
+    margin: 0 0 0 1rem;
 }
 
 #content {
@@ -197,7 +216,7 @@ input {
     width: 24rem;
     height: 2rem;
     border: solid 1px #000000;
-    margin: 0;
+    margin: 0 0 0 1rem;
 }
 
 .primary-btn {
