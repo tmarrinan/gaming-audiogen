@@ -24,7 +24,13 @@ onMounted(() => {
         height: 576,
         canvas: phaser.canvas,
         physics: {
-            default: 'matter'
+            default: 'matter',
+            matter: {
+                gravity: {
+                    y: 0.3
+                },
+                debug: false
+            }
         },
         scene: [
             GameScene
@@ -37,3 +43,27 @@ onMounted(() => {
     phaser.game = new Game(config);
 });
 </script>
+
+<template>
+    <div id="content">
+        <canvas id="canvas"></canvas>
+    </div>
+</template>
+
+<style scoped>
+* {
+    font-size: 1rem;
+}
+
+#content {
+    width: 1050px;
+    margin: 0 auto;
+}
+
+#canvas {
+    display: block;
+    width: 1024px;
+    height: 576px;
+    border: solid 1px #000000;;
+}
+</style>

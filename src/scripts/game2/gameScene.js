@@ -1,4 +1,6 @@
-import { Scene } from 'phaser';
+import { Scene, Physics } from 'phaser';
+
+const Matter = Physics.Matter.Matter;
 
 class GameScene extends Scene {
     constructor(config) {
@@ -9,6 +11,9 @@ class GameScene extends Scene {
 
     preload() {
         this.canvas = this.sys.game.canvas;
+
+        console.log(Matter.Body);
+        console.log(Matter.Bodies);
     }
   
     create() {
@@ -20,3 +25,4 @@ class GameScene extends Scene {
     }
 };
 
+export { GameScene };
