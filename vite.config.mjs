@@ -12,5 +12,14 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        index: fileURLToPath(new URL('./index.html', import.meta.url)),
+        game1: fileURLToPath(new URL('./game1.html', import.meta.url)),
+        game2: fileURLToPath(new URL('./game2.html', import.meta.url)),
+      }
+    }
   }
-})
+});

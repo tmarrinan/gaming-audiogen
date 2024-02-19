@@ -5,9 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vue App</title>
     <link rel="stylesheet" href="style.css"/>
+    <style>
+        h2 {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        p {
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        a {
+            background-color: #152A64;
+            color: #FFFFFF;
+            font-size: 1rem;
+            text-decoration: none;
+            padding: 0.5rem 2rem;
+            margin: 0 1rem;
+        }
+
+        #nav {
+            margin: 0 auto;
+            width: 1024px;
+        }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <div id="nav">
+        <h2>Select a Game:</h2>
+        <p><a href="./game1">Game 1</a><a href="./game2">Game 2</a></p>
+    </div>
   </body>
 </html>
