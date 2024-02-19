@@ -1,7 +1,7 @@
 <script setup>
 import { Game, WEBGL } from 'phaser';
 import { reactive, ref, onMounted } from 'vue';
-import { GameScene } from './scripts/gameScene';
+import { GameScene } from './scripts/game1/gameScene';
 
 const BASE_URL = import.meta.env.BASE_URL || '/';
 
