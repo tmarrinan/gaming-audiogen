@@ -4,6 +4,8 @@ import { Scene } from 'phaser';
 import Level1 from './level1';
 import Level2 from './level2';
 import Level3 from './level3';
+// background color to "mood" description
+import { ColorArrayToMoodDescription } from './color2mood'
 
 
 class GameScene extends Scene {
@@ -330,6 +332,21 @@ class GameScene extends Scene {
 
             // Restart
             this.scene.restart();
+
+            setTimeout(() => {
+                this.renderer.snapshot((image) => {
+                    // download
+                    let mime_type = 'image/png';
+                    var img_url = image.src;
+                    var dl_link = document.createElement('a');
+                    dl_link.download = 'phaser_snapshot.png';
+                    dl_link.href = img_url;
+                    dl_link.dataset.downloadurl = [mime_type, dl_link.download, dl_link.href].join(':');
+                    document.body.appendChild(dl_link);
+                    dl_link.click();
+                    document.body.removeChild(dl_link);
+                }, 'image/png');
+            }, 2000);
         }
         else {
             alert('Error: level not created');
@@ -454,6 +471,10 @@ class GameScene extends Scene {
                 color: platform.tint
             });
         });
+
+        // create description for audio generator
+        let mood = ColorArrayToMoodDescription(this.editor.background);
+        console.log(mood);
     }
 };
 
