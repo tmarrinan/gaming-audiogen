@@ -71,35 +71,35 @@ class GameScene extends Scene {
             this.terrain_bodies.push(body);
         }
 
+        let vehicle_group = -1; // must be negative number
         let vehicle_pos = {x: 64, y: 8};
         let wheel_a_offset = {x: -20, y: 24};
         let wheel_b_offset = {x: 20, y: 24};
         let body = this.matter.add.image(vehicle_pos.x, vehicle_pos.y, 'cardboard-box', null, {shape: 'rectangle', mass: 1.0, friction: 0.15});
         body.setScale(0.125);
-        body.setCollisionGroup(-1);
+        body.setCollisionGroup(vehicle_group);
         let wheel_a = this.matter.add.image(vehicle_pos.x + wheel_a_offset.x, vehicle_pos.y + wheel_a_offset.y, 'car-tire', null,
-                                            {shape: 'circle', mass: 2.0, friction: 0.01});
+                                            {shape: 'circle', mass: 2.0, friction: 0.1});
         wheel_a.setScale(0.125);
-        wheel_a.setCollisionGroup(-1);
-        wheel_a.setBounce(0.7);
+        wheel_a.setCollisionGroup(vehicle_group);
+        wheel_a.setBounce(0.3);
         let wheel_b = this.matter.add.image(vehicle_pos.x + wheel_b_offset.x, vehicle_pos.y + wheel_b_offset.y, 'car-tire', null,
-                                            {shape: 'circle', mass: 2.0, friction: 0.01});
-        wheel_b.setCollisionGroup(-1);
+                                            {shape: 'circle', mass: 2.0, friction: 0.1});
+        wheel_b.setCollisionGroup(vehicle_group);
         wheel_b.setScale(0.125);
-        wheel_b.setBounce(0.7);
+        wheel_b.setBounce(0.3);
 
         let axel_a = this.matter.add.constraint(body.body, wheel_a.body, 0, 0.2, {pointA: wheel_a_offset});
         let axel_b = this.matter.add.constraint(body.body, wheel_b.body, 0, 0.2, {pointA: wheel_b_offset});
 
         this.vehicle = [body, wheel_a, wheel_b];
-
-        // this.ball = this.matter.add.image(32, 32, 'car-tire', null, {shape: 'circle', mass: 2.0, friction: 0.01});
-        // this.ball.setScale(0.125);
-        // this.ball.setBounce(0.7);
     }
 
     update(time, delta) {
-
+        let wheel_rear = this.vehicle[1].body;
+        let wheel_front = this.vehicle[2].body;
+        Matter.Body.setAngularVelocity(wheel_rear, 0.10);
+        Matter.Body.setAngularVelocity(wheel_front, 0.10);
     }
 
     drawBackgroundAndTerrain() {
