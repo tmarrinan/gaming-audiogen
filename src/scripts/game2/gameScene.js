@@ -16,15 +16,36 @@ class GameScene extends Scene {
         this.terrain = [
             {x: 0, y: 100},
             {x: 150, y: 150},
-            {x: 325, y: 400},
-            {x: 500, y: 500},
-            {x: 600, y: 475},
-            {x: 800, y: 475},
+            {x: 250, y: 225},
+            {x: 325, y: 325},
+            {x: 425, y: 425},
+            {x: 500, y: 475},
+            {x: 550, y: 475},
+            {x: 625, y: 450},
+            {x: 700, y: 400},
+            {x: 800, y: 400},
             {x: 900, y: 550},
             {x: 1024, y: 550}
         ];
+        // this.terrain = [
+        //     {x: 0, y: 300},
+        //     {x: 200, y: 300},
+        //     {x: 216, y: 316},
+        //     {x: 232, y: 300},
+        //     {x: 300, y: 300},
+        //     {x: 500, y: 400},
+        //     {x: 600, y: 400},
+        //     {x: 616, y: 384},
+        //     {x: 632, y: 400},
+        //     {x: 700, y: 400},
+        //     {x: 900, y: 350},
+        //     {x: 1024, y: 350}
+        // ];
         this.terrain_bodies = [];
         this.vehicle = null;
+        this.weight = 0.0;
+        this.max_speed = 0.10;
+        this.acceleration = 0.5;
     }
 
     preload() {
@@ -60,7 +81,7 @@ class GameScene extends Scene {
                 {
                     label: 'terrain' + i,
                     isStatic: true,
-                    friction: 0.01
+                    friction: 0.0015
                 },
                 false,
                 0.01,
@@ -73,33 +94,50 @@ class GameScene extends Scene {
 
         let vehicle_group = -1; // must be negative number
         let vehicle_pos = {x: 64, y: 8};
-        let wheel_a_offset = {x: -20, y: 24};
-        let wheel_b_offset = {x: 20, y: 24};
-        let body = this.matter.add.image(vehicle_pos.x, vehicle_pos.y, 'cardboard-box', null, {shape: 'rectangle', mass: 1.0, friction: 0.15});
+        let wheel_a_offset = {x: -28, y: 24};
+        let wheel_b_offset = {x: 28, y: 24};
+        let body_mass = 7.0;
+        let wheel_mass = 3.5;
+        let body = this.matter.add.image(vehicle_pos.x, vehicle_pos.y, 'cardboard-box', null, {shape: 'rectangle', mass: body_mass, friction: 0.15});
         body.setScale(0.125);
         body.setCollisionGroup(vehicle_group);
         let wheel_a = this.matter.add.image(vehicle_pos.x + wheel_a_offset.x, vehicle_pos.y + wheel_a_offset.y, 'car-tire', null,
-                                            {shape: 'circle', mass: 2.0, friction: 0.1});
-        wheel_a.setScale(0.125);
+                                            {shape: 'circle', mass: wheel_mass, friction: 0.25});
+        wheel_a.setScale(0.175);
         wheel_a.setCollisionGroup(vehicle_group);
         wheel_a.setBounce(0.3);
         let wheel_b = this.matter.add.image(vehicle_pos.x + wheel_b_offset.x, vehicle_pos.y + wheel_b_offset.y, 'car-tire', null,
-                                            {shape: 'circle', mass: 2.0, friction: 0.1});
+                                            {shape: 'circle', mass: wheel_mass, friction: 0.25});
         wheel_b.setCollisionGroup(vehicle_group);
-        wheel_b.setScale(0.125);
+        wheel_b.setScale(0.175);
         wheel_b.setBounce(0.3);
 
         let axel_a = this.matter.add.constraint(body.body, wheel_a.body, 0, 0.2, {pointA: wheel_a_offset});
         let axel_b = this.matter.add.constraint(body.body, wheel_b.body, 0, 0.2, {pointA: wheel_b_offset});
 
+        this.weight = body_mass + 2 * wheel_mass;
         this.vehicle = [body, wheel_a, wheel_b];
     }
 
     update(time, delta) {
+        let scale = 0.1 * this.weight;
+        let accel = this.acceleration * scale * (delta / 1000);
+        let max_s = this.max_speed;
         let wheel_rear = this.vehicle[1].body;
         let wheel_front = this.vehicle[2].body;
-        Matter.Body.setAngularVelocity(wheel_rear, 0.10);
-        Matter.Body.setAngularVelocity(wheel_front, 0.10);
+
+        let new_speed_rear = wheel_rear.angularSpeed;
+        if (new_speed_rear < max_s) {
+            new_speed_rear = (wheel_rear.angularSpeed <= 0) ? max_s / 10 : wheel_rear.angularSpeed + accel;
+            new_speed_rear = Math.min(new_speed_rear, max_s);
+        }
+        let new_speed_front = wheel_front.angularSpeed;
+        if (new_speed_front < max_s) {
+            new_speed_front = (wheel_front.angularSpeed <= 0) ? max_s / 10 : wheel_front.angularSpeed + accel;
+            new_speed_front = Math.min(new_speed_front, max_s);
+        }
+        Matter.Body.setAngularVelocity(wheel_rear, new_speed_rear);
+        Matter.Body.setAngularVelocity(wheel_front, new_speed_front);
     }
 
     drawBackgroundAndTerrain() {
