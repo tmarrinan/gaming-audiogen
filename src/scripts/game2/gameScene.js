@@ -46,19 +46,39 @@ class GameScene extends Scene {
         this.weight = 0.0;
         this.max_speed = 0.10;
         this.acceleration = 0.5;
+
+        this.vehicle_parts = {
+            wheels: {
+                'car-tire': {scale: 0.175, mass: 3.5, friction: 0.250, bounce: 0.30},
+                'wagon-wheel': {scale: 0.200, mass: 3.5, friction: 0.005, bounce: 0.05},
+                'inner-tube': {scale: 0.275, mass: 1.5, friction: 0.300, bounce: 0.45}
+            },
+            body: {
+                'cardboard-box': {scale: 0.15, mass: 0.5, friction: 0.150},
+                'wood-log': {scale: 0.15, mass: 4.0, friction: 0.250},
+                'steel-pipe': {scale: 0.15, mass: 8.5, friction: 0.100},
+                'cinder-block': {scale: 0.15, mass: 3.5, friction: 0.450},
+                'skis': {scale: 0.15, mass: 1.0, friction: 0.001},
+                'computer': {scale: 0.15, mass: 0.5, friction: 0.400}
+            }
+        };
     }
 
     preload() {
         this.canvas = this.sys.game.canvas;
 
-        console.log(Matter.Body);
-        console.log(Matter.Bodies);
-
         // Joints: https://labs.phaser.io/edit.html?src=src\physics\matterjs\chain.js
         // Compound Body: https://github.com/phaserjs/examples/blob/master/public/src/physics/matterjs/compound%20body.js
 
         this.load.image('car-tire', 'assets/car-tire.png');
+        this.load.image('wagon-wheel', 'assets/wagon-wheel.png');
+        this.load.image('inner-tube', 'assets/inner-tube.png');
         this.load.image('cardboard-box', 'assets/cardboard-box.png');
+        this.load.image('wood-log', 'assets/wood-log.png');
+        this.load.image('steel-pipe', 'assets/steel-pipe.png');
+        this.load.image('cinder-block', 'assets/cinder-block.png');
+        this.load.image('skis', 'assets/skis.png');
+        this.load.image('computer', 'assets/computer.png');
     }
   
     create() {
@@ -66,7 +86,6 @@ class GameScene extends Scene {
         this.graphics = this.add.graphics();
         this.drawBackgroundAndTerrain();
 
-        console.log(this.terrain);
         for (let i = 0; i< this.terrain.length - 1; i++) {
             let v1 = {x: this.terrain[i].x, y: this.terrain[i].y};
             let v2 = {x: this.terrain[i + 1].x, y: this.terrain[i + 1].y};
