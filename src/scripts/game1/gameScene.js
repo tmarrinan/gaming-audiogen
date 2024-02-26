@@ -23,6 +23,7 @@ class GameScene extends Scene {
             Level3,
             null
         ];
+        this.music = null;
         this.cursors = null;
         this.graphics = null;
         this.platforms = null;
@@ -53,11 +54,21 @@ class GameScene extends Scene {
         this.load.image('selection', 'assets/selection-ninepatch.png');
         this.load.image('goal', 'assets/goal.png');
         this.load.spritesheet('dude', 'assets/dude.png', {frameWidth: 32, frameHeight: 48});
+
+        this.load.audio('music-grass', ['assets/grasslands_loop.wav']);
+        this.load.audio('music-beach', ['assets/beach_loop.wav']);
+        this.load.audio('music-cave', ['assets/cave_loop.wav']);
     }
   
     create() {
         // Game not over
         this.finished = false;
+
+        // Load audio
+        const music_tracks = ['music-grass', 'music-beach', 'music-cave', 'music-beach'];
+        this.music = this.sound.add(music_tracks[this.current_level]);
+        this.music.loop = true;
+        this.music.play();
 
         // Disable collisions with bottom
         this.physics.world.checkCollision.down = false;
@@ -354,6 +365,8 @@ class GameScene extends Scene {
     }
 
     clearAssets() {
+        this.music.destroy();
+
         this.graphics.destroy();
 
         for (let platform of this.platform_gameobjects) {
