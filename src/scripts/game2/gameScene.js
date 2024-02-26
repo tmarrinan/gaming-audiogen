@@ -14,7 +14,7 @@ class GameScene extends Scene {
             0x483E87
         ];
         this.terrain = [
-            {x: 0, y: 100},
+            {x: -150, y: 50},
             {x: 150, y: 150},
             {x: 250, y: 225},
             {x: 325, y: 325},
@@ -42,6 +42,7 @@ class GameScene extends Scene {
         //     {x: 1024, y: 350}
         // ];
         this.terrain_bodies = [];
+        this.vehicle_description = null;
         this.vehicle = null;
         this.weight = 0.0;
         this.max_speed = 0.10;
@@ -185,30 +186,77 @@ class GameScene extends Scene {
             }
 
             let vehicle_group = -1; // must be negative number
-            let vehicle_pos = {x: 64, y: 8};
-            let wheel_a_offset = {x: -28, y: 24};
-            let wheel_b_offset = {x: 28, y: 24};
-            let body_mass = 7.0;
-            let wheel_mass = 3.5;
-            let body = this.matter.add.image(vehicle_pos.x, vehicle_pos.y, 'cardboard-box', null, {shape: 'rectangle', mass: body_mass, friction: 0.15});
-            body.setScale(0.125);
-            body.setCollisionGroup(vehicle_group);
-            let wheel_a = this.matter.add.image(vehicle_pos.x + wheel_a_offset.x, vehicle_pos.y + wheel_a_offset.y, 'car-tire', null,
-                                                {shape: 'circle', mass: wheel_mass, friction: 0.25});
-            wheel_a.setScale(0.175);
-            wheel_a.setCollisionGroup(vehicle_group);
-            wheel_a.setBounce(0.3);
-            let wheel_b = this.matter.add.image(vehicle_pos.x + wheel_b_offset.x, vehicle_pos.y + wheel_b_offset.y, 'car-tire', null,
-                                                {shape: 'circle', mass: wheel_mass, friction: 0.25});
-            wheel_b.setCollisionGroup(vehicle_group);
-            wheel_b.setScale(0.175);
-            wheel_b.setBounce(0.3);
+            let vehicle_pos = {x: 64, y: 16};
+            let body_list = [];
+            let body_body = [];
+            let wheel_list = [];
+            this.vehicle_description.forEach((part) => {
+                let mass = this.vehicle_parts[part.type][part.part].mass;
+                let friction = this.vehicle_parts[part.type][part.part].friction;
+                let scale = this.vehicle_parts[part.type][part.part].scale;
+                if (part.type === 'body') {
+                    let body = this.add.image(part.x, part.y, part.part, 0);
+                    body.setScale(scale);
+                    body_list.push(body);
+                    let body_rect = Matter.Bodies.rectangle(part.x, part.y, part.width, part.height, {mass: mass, friction: friction});
+                    body_body.push(body_rect);
+                }
+                else {
+                    let wheel = this.matter.add.image(part.x, part.y, part.part, null, {shape: 'circle', mass: mass, friction: friction});
+                    wheel.setCollisionGroup(vehicle_group);
+                    wheel.setScale(scale);
+                    wheel.setBounce(this.vehicle_parts.wheels[part.part].bounce);
+                }
+            });
+            let final_body = Matter.Body.create({parts: body_body});
+            body_list.forEach((b)=> {
+                b.x -= final_body.centerOffset.x;
+                b.y -= final_body.centerOffset.y;
+            });
+            let body_container = this.add.container(vehicle_pos.x, vehicle_pos.y, body_list);
+            let body_physics = this.matter.add.gameObject(body_container, final_body);
+            body_physics.setCollisionGroup(vehicle_group);
 
-            let axel_a = this.matter.add.constraint(body.body, wheel_a.body, 0, 0.2, {pointA: wheel_a_offset});
-            let axel_b = this.matter.add.constraint(body.body, wheel_b.body, 0, 0.2, {pointA: wheel_b_offset});
+            //let center_of_mass = Matter.Vector.sub(body_physics.body.bounds.min, body_physics.body.position);
+            // console.log(center_of_mass);
+            // Matter.Body.setPosition(body_physics.body, { x: 400, y: 400 });
+            //Matter.Body.setPosition(body_rect, { x: Math.abs(center_of_mass.x) + 0, y: Math.abs(center_of_mass.y) + 0 })
+            //console.log(body_physics.centerOfMass);
+            //let compound_body = Matter.Body.create({parts: body_body});
+            //body_physics.setExistingBody(compound_body);
 
-            this.weight = body_mass + 2 * wheel_mass;
-            this.vehicle = [body, wheel_a, wheel_b];
+            // let body = this.add.container(vehicle_pos.x, vehicle_pos.y, body_list);
+            // this.matter.world.add(body);
+            // let compound_body = Matter.Body.create({parts: body_body});
+            // body.body = compound_body;
+            // console.log(body);
+            //body.setCollisionGroup(vehicle_group);
+
+
+
+            // let wheel_a_offset = {x: -28, y: 24};
+            // let wheel_b_offset = {x: 28, y: 24};
+            // let body_mass = 7.0;
+            // let wheel_mass = 3.5;
+            // let body = this.matter.add.image(vehicle_pos.x, vehicle_pos.y, 'cardboard-box', null, {shape: 'rectangle', mass: body_mass, friction: 0.15});
+            // body.setScale(0.125);
+            // body.setCollisionGroup(vehicle_group);
+            // let wheel_a = this.matter.add.image(vehicle_pos.x + wheel_a_offset.x, vehicle_pos.y + wheel_a_offset.y, 'car-tire', null,
+            //                                     {shape: 'circle', mass: wheel_mass, friction: 0.25});
+            // wheel_a.setScale(0.175);
+            // wheel_a.setCollisionGroup(vehicle_group);
+            // wheel_a.setBounce(0.3);
+            // let wheel_b = this.matter.add.image(vehicle_pos.x + wheel_b_offset.x, vehicle_pos.y + wheel_b_offset.y, 'car-tire', null,
+            //                                     {shape: 'circle', mass: wheel_mass, friction: 0.25});
+            // wheel_b.setCollisionGroup(vehicle_group);
+            // wheel_b.setScale(0.175);
+            // wheel_b.setBounce(0.3);
+
+            // let axel_a = this.matter.add.constraint(body.body, wheel_a.body, 0, 0.2, {pointA: wheel_a_offset});
+            // let axel_b = this.matter.add.constraint(body.body, wheel_b.body, 0, 0.2, {pointA: wheel_b_offset});
+
+            // this.weight = body_mass + 2 * wheel_mass;
+            // this.vehicle = [body, wheel_a, wheel_b];
         }
     }
 
@@ -217,24 +265,24 @@ class GameScene extends Scene {
 
         }
         else {
-            let scale = 0.1 * this.weight;
-            let accel = this.acceleration * scale * (delta / 1000);
-            let max_s = this.max_speed;
-            let wheel_rear = this.vehicle[1].body;
-            let wheel_front = this.vehicle[2].body;
+            // let scale = 0.1 * this.weight;
+            // let accel = this.acceleration * scale * (delta / 1000);
+            // let max_s = this.max_speed;
+            // let wheel_rear = this.vehicle[1].body;
+            // let wheel_front = this.vehicle[2].body;
 
-            let new_speed_rear = wheel_rear.angularSpeed;
-            if (new_speed_rear < max_s) {
-                new_speed_rear = (wheel_rear.angularSpeed <= 0) ? max_s / 10 : wheel_rear.angularSpeed + accel;
-                new_speed_rear = Math.min(new_speed_rear, max_s);
-            }
-            let new_speed_front = wheel_front.angularSpeed;
-            if (new_speed_front < max_s) {
-                new_speed_front = (wheel_front.angularSpeed <= 0) ? max_s / 10 : wheel_front.angularSpeed + accel;
-                new_speed_front = Math.min(new_speed_front, max_s);
-            }
-            Matter.Body.setAngularVelocity(wheel_rear, new_speed_rear);
-            Matter.Body.setAngularVelocity(wheel_front, new_speed_front);
+            // let new_speed_rear = wheel_rear.angularSpeed;
+            // if (new_speed_rear < max_s) {
+            //     new_speed_rear = (wheel_rear.angularSpeed <= 0) ? max_s / 10 : wheel_rear.angularSpeed + accel;
+            //     new_speed_rear = Math.min(new_speed_rear, max_s);
+            // }
+            // let new_speed_front = wheel_front.angularSpeed;
+            // if (new_speed_front < max_s) {
+            //     new_speed_front = (wheel_front.angularSpeed <= 0) ? max_s / 10 : wheel_front.angularSpeed + accel;
+            //     new_speed_front = Math.min(new_speed_front, max_s);
+            // }
+            // Matter.Body.setAngularVelocity(wheel_rear, new_speed_rear);
+            // Matter.Body.setAngularVelocity(wheel_front, new_speed_front);
         }
     }
 
@@ -242,6 +290,40 @@ class GameScene extends Scene {
         if (this.edit_mode) {
             if (this.play_button.getBounds().contains(pointer.x, pointer.y)) {
                 this.edit_mode = false;
+
+                let editor_bounds = {x_min: 9999, x_max: -9999, y_min: 9999, y_max: -9999};
+                this.editor_vehicle.forEach((part) => {
+                    if (part.game_object.x < editor_bounds.x_min) editor_bounds.x_min = part.game_object.x;
+                    if (part.game_object.x > editor_bounds.x_max) editor_bounds.x_max = part.game_object.x;
+                    if (part.game_object.y < editor_bounds.y_min) editor_bounds.y_min = part.game_object.y;
+                    if (part.game_object.y > editor_bounds.y_max) editor_bounds.y_max = part.game_object.y;
+                    // let bounds = part.game_object.getBounds();
+                    // if (bounds.x < editor_bounds.x_min) editor_bounds.x_min = bounds.x;
+                    // if (bounds.x + bounds.width > editor_bounds.x_max) editor_bounds.x_max = bounds.x + bounds.width;
+                    // if (bounds.y < editor_bounds.y_min) editor_bounds.y_min = bounds.y;
+                    // if (bounds.y + bounds.height > editor_bounds.y_max) editor_bounds.y_max = bounds.y + bounds.height;
+                });
+                let center_pos = {
+                    x: (editor_bounds.x_min + editor_bounds.x_max) / 2, 
+                    y: (editor_bounds.y_min + editor_bounds.y_max) / 2
+                };
+
+                this.vehicle_description = [];
+                this.editor_vehicle.forEach((part) => {
+                    let bounds = part.game_object.getBounds();
+                    this.vehicle_description.push({
+                        type: part.type,
+                        part: part.game_object.texture.key,
+                        x: Math.round((part.game_object.x - center_pos.x) / 2),
+                        y: Math.round((part.game_object.y - center_pos.y) / 2),
+                        left: Math.round((part.game_object.x - (bounds.width / 2) - center_pos.x) / 2),
+                        top: Math.round((part.game_object.y - (bounds.height / 2) - center_pos.y) / 2),
+                        width: Math.round(bounds.width / 2),
+                        height: Math.round(bounds.height / 2)
+                    });
+                });
+                console.log(this.vehicle_description);
+
                 this.clearEditorAssets();
                 this.scene.restart();
             }
