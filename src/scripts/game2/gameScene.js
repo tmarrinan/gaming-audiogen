@@ -161,7 +161,7 @@ class GameScene extends Scene {
             this.drawBackgroundAndTerrain();
 
             for (let i = 0; i< this.terrain.length - 1; i++) {
-                let v1 = {x: this.terrain[i].x, y: this.terrain[i].y};
+                let v1 = {x: this.terrain[i].x, y: this.terrain[i].y + 1};
                 let v2 = {x: this.terrain[i + 1].x, y: this.terrain[i + 1].y};
                 let v3 = {x: this.terrain[i + 1].x, y: this.canvas.height};
                 let v4 = {x: this.terrain[i].x, y: this.canvas.height};
@@ -174,7 +174,7 @@ class GameScene extends Scene {
                     {
                         label: 'terrain' + i,
                         isStatic: true,
-                        friction: 0.0015
+                        friction: 0.15
                     },
                     false,
                     0.01,
@@ -190,6 +190,7 @@ class GameScene extends Scene {
             let body_list = [];
             let body_body = [];
             let wheel_list = [];
+            this.weight = 0.0;
             this.vehicle_description.forEach((part) => {
                 let mass = this.vehicle_parts[part.type][part.part].mass;
                 let friction = this.vehicle_parts[part.type][part.part].friction;
@@ -206,16 +207,31 @@ class GameScene extends Scene {
                     wheel.setCollisionGroup(vehicle_group);
                     wheel.setScale(scale);
                     wheel.setBounce(this.vehicle_parts.wheels[part.part].bounce);
+                    wheel.body.slideFactor = 0.0;
+                    //wheel.body.pushable = false;
+                    wheel_list.push(wheel);
                 }
+                this.weight += mass;
             });
+
             let final_body = Matter.Body.create({parts: body_body});
+            let offset_x = final_body.centerOffset.x;
+            let offset_y = final_body.centerOffset.y;
             body_list.forEach((b)=> {
-                b.x -= final_body.centerOffset.x;
-                b.y -= final_body.centerOffset.y;
+                b.x -= offset_x;
+                b.y -= offset_y;
             });
             let body_container = this.add.container(vehicle_pos.x, vehicle_pos.y, body_list);
             let body_physics = this.matter.add.gameObject(body_container, final_body);
             body_physics.setCollisionGroup(vehicle_group);
+
+            this.wheels = [];
+            wheel_list.forEach((wheel) => {
+                wheel.body.x -= offset_x;
+                wheel.body.x -= offset_y;
+                this.matter.add.constraint(body_physics.body, wheel.body, 0, 0.8, {pointA: {x: wheel.x, y: wheel.y}});
+                this.wheels.push(wheel.body);
+            });
 
             //let center_of_mass = Matter.Vector.sub(body_physics.body.bounds.min, body_physics.body.position);
             // console.log(center_of_mass);
@@ -265,9 +281,21 @@ class GameScene extends Scene {
 
         }
         else {
-            // let scale = 0.1 * this.weight;
-            // let accel = this.acceleration * scale * (delta / 1000);
-            // let max_s = this.max_speed;
+            let scale = 0.1 * this.weight;
+            let accel = this.acceleration * scale * (delta / 1000);
+            let max_s = this.max_speed;
+
+            this.wheels.forEach((wheel) => {
+                let new_speed = wheel.angularSpeed;
+                if (new_speed < max_s) {
+                    new_speed = (wheel.angularSpeed <= 0) ? max_s / 10 : wheel.angularSpeed + accel;
+                    new_speed = Math.min(new_speed, max_s);
+                    Matter.Body.setAngularVelocity(wheel, new_speed);
+                }
+            });
+
+
+
             // let wheel_rear = this.vehicle[1].body;
             // let wheel_front = this.vehicle[2].body;
 
