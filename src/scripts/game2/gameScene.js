@@ -44,6 +44,7 @@ class GameScene extends Scene {
         this.terrain_bodies = [];
         this.vehicle_description = null;
         this.vehicle = null;
+        this.edit_button = null;
         this.weight = 0.0;
         this.max_speed = 0.10;
         this.acceleration = 0.5;
@@ -232,6 +233,16 @@ class GameScene extends Scene {
                 this.matter.add.constraint(body_physics.body, wheel.body, 0, 0.8, {pointA: {x: wheel.x, y: wheel.y}});
                 this.wheels.push(wheel.body);
             });
+
+            const font = {
+                color: '#FFFFFF',
+                backgroundColor: '#A64440',
+                fontFamily: 'monospace',
+                fontSize: '36px',
+                padding: {x: 8, y: 4}
+            };
+            this.edit_button = this.add.text(this.canvas.width - 20, 20, 'Edit', font);
+            this.edit_button.setOrigin(1.0, 0.0);
 
             //let center_of_mass = Matter.Vector.sub(body_physics.body.bounds.min, body_physics.body.position);
             // console.log(center_of_mass);

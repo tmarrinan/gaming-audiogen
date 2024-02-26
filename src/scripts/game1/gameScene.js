@@ -333,20 +333,20 @@ class GameScene extends Scene {
             // Restart
             this.scene.restart();
 
-            setTimeout(() => {
-                this.renderer.snapshot((image) => {
-                    // download
-                    let mime_type = 'image/png';
-                    var img_url = image.src;
-                    var dl_link = document.createElement('a');
-                    dl_link.download = 'phaser_snapshot.png';
-                    dl_link.href = img_url;
-                    dl_link.dataset.downloadurl = [mime_type, dl_link.download, dl_link.href].join(':');
-                    document.body.appendChild(dl_link);
-                    dl_link.click();
-                    document.body.removeChild(dl_link);
-                }, 'image/png');
-            }, 2000);
+            // setTimeout(() => {
+            //     this.renderer.snapshot((image) => {
+            //         // download
+            //         let mime_type = 'image/png';
+            //         var img_url = image.src;
+            //         var dl_link = document.createElement('a');
+            //         dl_link.download = 'phaser_snapshot.png';
+            //         dl_link.href = img_url;
+            //         dl_link.dataset.downloadurl = [mime_type, dl_link.download, dl_link.href].join(':');
+            //         document.body.appendChild(dl_link);
+            //         dl_link.click();
+            //         document.body.removeChild(dl_link);
+            //     }, 'image/png');
+            // }, 2000);
         }
         else {
             alert('Error: level not created');
