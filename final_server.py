@@ -12,7 +12,9 @@ def main():
 @app.route('/')
 def index():
     f = open(os.path.join('dist', 'index.html'), 'r', encoding='UTF-8')
-    return Response(f.read(), mimetype='text/html')
+    home = f.read()
+    f.close()
+    return Response(home, mimetype='text/html')
 
 # POST: AudioGen
 @app.route('/audiogen', methods=['POST'])
@@ -33,7 +35,10 @@ def generateMusic():
         f_img = open(os.path.join('tmp', 'screenshot.png'), 'wb')
         f_img.write(png)
         f_img.close()
-    return Response('Testing', mimetype='text/plain') # TODO: send audio
+    f_audio = open('test_10sec.wav', 'rb')
+    audio = f_audio.read()
+    f_audio.close()
+    return Response(audio, mimetype='audio/wav')
 
 
 if __name__ == '__main__':

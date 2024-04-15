@@ -59,6 +59,7 @@ class GameScene extends Scene {
         this.load.audio('music-grass', ['assets/grasslands_loop.wav']);
         this.load.audio('music-beach', ['assets/beach_loop.wav']);
         this.load.audio('music-cave', ['assets/cave_loop.wav']);
+        this.load.audio('music-custom', ['assets/beach_loop.wav']);
     }
   
     create() {
@@ -66,7 +67,7 @@ class GameScene extends Scene {
         this.finished = false;
 
         // Load audio
-        const music_tracks = ['music-grass', 'music-beach', 'music-cave', 'music-beach'];
+        const music_tracks = ['music-grass', 'music-beach', 'music-cave', 'music-custom'];
         this.music = this.sound.add(music_tracks[this.current_level]);
         this.music.loop = true;
         this.music.play();
@@ -496,7 +497,6 @@ class GameScene extends Scene {
             }
             else if (this.musicgen_mode === 'image') {
                 this.renderer.snapshot((image) => {
-                    console.log(image.src);
                     resolve({type: 'image', text: null, image: image.src});
                 }, 'image/png');
             }
@@ -516,10 +516,18 @@ class GameScene extends Scene {
             return fetch('/musicgen', options);
         })
         .then((response) => {
-            return response.text(); // change to blob / whatever type audio is
+            return response.blob();
         })
         .then((data) => {
-            console.log(data);
+            const audio_url = URL.createObjectURL(data);
+            if (this.cache.audio.exists('music-custom')) {
+                this.cache.audio.remove('music-custom');
+            }
+            this.load.audio('music-custom', [audio_url]);
+            this.load.start();
+            // this.load.once('complete', () => {
+            //     this.sound.add('music-custom');
+            // });
         })
         .catch((err) => {
             console.log(err);
