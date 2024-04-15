@@ -14,6 +14,7 @@ class GameScene extends Scene {
 
         this.current_level = 0;
         this.mode = 'game';
+        this.musicgen_mode = 'image';
 
         this.canvas = null;
         this.finished = false;
@@ -486,8 +487,43 @@ class GameScene extends Scene {
         });
 
         // create description for audio generator
-        let mood = ColorArrayToMoodDescription(this.editor.background);
-        console.log(mood);
+        let upload = {};
+        let p = new Promise((resolve, reject) => {
+            if (this.musicgen_mode === 'text') {
+                let mood = ColorArrayToMoodDescription(this.editor.background);
+                let audio_desc = '90s game vibe with ' + mood + ' chiptunes and 8-bit melodies';
+                resolve({type: 'text', text: audio_desc, image: null});
+            }
+            else if (this.musicgen_mode === 'image') {
+                this.renderer.snapshot((image) => {
+                    console.log(image.src);
+                    resolve({type: 'image', text: null, image: image.src});
+                }, 'image/png');
+            }
+            else {
+                reject('invalid MusicGen mode: ' + this.musicgen_mode);
+            }
+        });
+
+        p.then((upload) => {
+            let options = {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(upload),
+                method: 'POST'
+            };
+            return fetch('/musicgen', options);
+        })
+        .then((response) => {
+            return response.text(); // change to blob / whatever type audio is
+        })
+        .then((data) => {
+            console.log(data);
+        })
+        .catch((err) => {
+            console.log(err);
+        });
     }
 };
 

@@ -68,7 +68,7 @@ function ColorArrayToMoodDescription(color_array) {
     }
     else {
         let top3 = largestKeys(colors, 3);
-        if (top3[0].value >= 2 * top3[1].value || (top3.length >= 3 && top3[1].value === top3[2].value)) {
+        if (top3.length == 1 || top3[0].value >= 2 * top3[1].value || (top3.length >= 3 && top3[1].value === top3[2].value)) {
             description = DESCRIPTIONS[top3[0].key];
         }
         else {
