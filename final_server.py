@@ -1,22 +1,35 @@
 import os
-import time
+import io
 import base64
+import torch
+import torchaudio
 from flask import Flask, request, Response
-from azure.cognitiveservices.vision.computervision import ComputerVisionClient
-from msrest.authentication import CognitiveServicesCredentials
+from PIL import Image
+from transformers import BlipProcessor, BlipForConditionalGeneration
+from audiocraft.models import AudioGen, MusicGen
+from audiocraft.data.audio import audio_write
+
 
 # Create web application
 app = Flask(__name__, static_url_path='', static_folder='dist')
 
-# Initialize Azure Computer Vision Client
-f_azure = open('azure_key.txt', 'r', encoding='UTF-8')
-subscription_key = f_azure.read()
-f_azure.close()
-endpoint = "https://audiocraft.cognitiveservices.azure.com/"
-computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
+# Initialize image-to-text processor
+itt_cuda_device = 'cuda:1'
+processor = BlipProcessor.from_pretrained('Salesforce/blip-image-captioning-base')
+model = BlipForConditionalGeneration.from_pretrained('Salesforce/blip-image-captioning-base').to(itt_cuda_device)
 
+
+# Initialize AudioCraft music and audio generators
+audiogen_model = AudioGen.get_pretrained('facebook/audiogen-medium')
+audiogen_model.set_generation_params(duration=5)
+musicgen_model = MusicGen.get_pretrained('facebook/musicgen-small')
+musicgen_model.set_generation_params(duration=8)
+
+# Run server
 def main():
-    app.run(port=8000)
+    cert = os.path.join('keys', 'fullchain.pem')
+    key = os.path.join('keys', 'privkey.pem')
+    app.run(ssl_context=(cert, key), host='0.0.0.0', port=8008)
 
 
 # Home page
@@ -44,27 +57,14 @@ def generateMusic():
         description = 'No description available.'
         png_b64 = req_data['image'][22:]
         png = base64.decodebytes(png_b64.encode('UTF-8'))
-        f_img = open(os.path.join('tmp', 'screenshot.png'), 'wb')
-        f_img.write(png)
-        f_img.close()
-        time.sleep(1)
-        url = "https://upload.wikimedia.org/wikipedia/commons/3/38/Supertux010.jpg"
-        analysis = computervision_client.describe_image(url)
-        if len(analysis.captions) > 0:
-            for caption in analysis.captions:
-                print(f'\'{caption.text}\' with confidence {caption.confidence * 100:.2f}%')
-        """
-        f_img = open(os.path.join('tmp', 'screenshot.png'), 'rb')
-        description_result = computervision_client.describe_image_in_stream(f_img, 3)
-        f_img.close()
-        print(description_result.captions)
-        if len(description_result.captions) > 0:
-            for caption in description_result.captions:
-                print(f'\'{caption.text}\' with confidence {caption.confidence * 100:.2f}%')
-            description = ' '.join([caption.text for caption in description_result.captions])
-        """
-        print(description)
-    f_audio = open('test_10sec.wav', 'rb')
+        img = Image.open(io.BytesIO(png)).convert('RGB')
+        inputs = processor(img, return_tensors='pt').to(itt_cuda_device)
+        out = model.generate(**inputs)
+        description = processor.decode(out[0], skip_special_tokens=True)
+    print(f'Generating music for "{description}"')
+    wav = musicgen_model.generate([description])
+    audio_write('musicgen', wav[0].cpu(), musicgen_model.sample_rate, strategy='loudness', loudness_compressor=True)
+    f_audio = open('musicgen.wav', 'rb')
     audio = f_audio.read()
     f_audio.close()
     return Response(audio, mimetype='audio/wav')
