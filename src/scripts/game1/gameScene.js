@@ -496,7 +496,12 @@ class GameScene extends Scene {
                 resolve({type: 'text', text: audio_desc, image: null});
             }
             else if (this.musicgen_mode === 'image') {
+                let tmp_player = this.physics.add.sprite(100, 475, 'dude');
+                tmp_player.setSize(24, 48);
+                tmp_player.setBounce(0.2);
+                tmp_player.setCollideWorldBounds(true);
                 this.renderer.snapshot((image) => {
+                    tmp_player.destroy();
                     resolve({type: 'image', text: null, image: image.src});
                 }, 'image/png');
             }
