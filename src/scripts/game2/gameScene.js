@@ -157,6 +157,8 @@ class GameScene extends Scene {
             }
         }
         else {
+            this.input.on('pointerdown', this.onPointerDown, this);
+
             // background and terrain
             this.graphics = this.add.graphics();
             this.drawBackgroundAndTerrain();
@@ -386,6 +388,13 @@ class GameScene extends Scene {
                 }
             }
         }
+        else {
+            if (this.edit_button.getBounds().contains(pointer.x, pointer.y)) {
+                this.edit_mode = true;
+                this.clearGameAssets();
+                this.scene.restart();
+            }
+        }
     }
 
     onPointerUp(pointer) {
@@ -423,6 +432,17 @@ class GameScene extends Scene {
         this.editor_vehicle = [];
 
         this.play_button.destroy();
+    }
+
+    clearGameAssets() {
+        this.graphics.destroy();
+
+        for (let body of this.terrain_bodies) {
+            this.matter.world.remove(body);
+        }
+        this.terrain_bodies = [];
+
+        this.edit_button.destroy();
     }
 
     drawBackgroundAndTerrain() {
