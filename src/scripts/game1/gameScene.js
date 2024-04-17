@@ -14,7 +14,7 @@ class GameScene extends Scene {
 
         this.current_level = 0;
         this.mode = 'game';
-        this.musicgen_mode = 'image';
+        this.musicgen_mode = 'text';
 
         this.canvas = null;
         this.finished = false;
@@ -467,6 +467,10 @@ class GameScene extends Scene {
         this.editor.platform_gameobjects.splice(index, 1);
     }
 
+    setAudioGenMethod(mode) {
+        this.musicgen_mode = mode;
+    }
+
     saveCustomLevel() {
         this.levels[3] = {
             background: [],
@@ -488,7 +492,6 @@ class GameScene extends Scene {
         });
 
         // create description for audio generator
-        let upload = {};
         let p = new Promise((resolve, reject) => {
             if (this.musicgen_mode === 'text') {
                 let mood = ColorArrayToMoodDescription(this.editor.background);

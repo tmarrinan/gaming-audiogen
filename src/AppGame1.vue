@@ -22,7 +22,8 @@ let app_state = reactive({
     selected_platform: {
         index: -1,
         color: '#FFFFFF'
-    }
+    },
+    gen_method: 'text'
 });
 
 function onEditorChange(data) {
@@ -87,6 +88,10 @@ function updatePlatformColor() {
 
 function deletePlatform() {
     phaser.scene.removeEditorPlatform(app_state.selected_platform.index);
+}
+
+function updateAudioGenMethod() {
+    phaser.scene.setAudioGenMethod(app_state.gen_method);
 }
 
 function saveCustomLevel() {
@@ -163,6 +168,13 @@ onMounted(() => {
                         <label>Plartform:</label>
                         <input type="color" v-model="app_state.selected_platform.color" @change="updatePlatformColor" />
                         <button type="button" @click="deletePlatform">Remove</button>
+                    </div>
+                    <div class="widget-row">
+                        <label>Music Generation Method:</label>
+                        <input type="radio" name="gen-type" value="text" v-model="app_state.gen_method" checked @change="updateAudioGenMethod" />
+                        <label>Text Description</label>
+                        <input type="radio" name="gen-type" value="image" v-model="app_state.gen_method" @change="updateAudioGenMethod" />
+                        <label>Image</label>
                     </div>
                     <div class="widget-row">
                         <button type="button" @click="saveCustomLevel">Save</button>
