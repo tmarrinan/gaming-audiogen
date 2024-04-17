@@ -50,6 +50,8 @@ class GameScene extends Scene {
         this.acceleration = 0.5;
 
         this.edit_mode = true;
+        this.update_mode_callback = null;
+        this.audiogen_mode = 'text';
         this.cursors = null;
         this.play_button = null;
         this.vehicle_parts = {
@@ -365,8 +367,12 @@ class GameScene extends Scene {
                 });
                 console.log(this.vehicle_description);
 
+                // TODO: generate audio here... only clear assets and restart once audio received
+
                 this.clearEditorAssets();
                 this.scene.restart();
+
+                if (this.update_mode_callback !== null) this.update_mode_callback('play');
             }
             else {
                 let selection = false;
@@ -393,6 +399,7 @@ class GameScene extends Scene {
                 this.edit_mode = true;
                 this.clearGameAssets();
                 this.scene.restart();
+                if (this.update_mode_callback !== null) this.update_mode_callback('edit'); 
             }
         }
     }
@@ -469,6 +476,14 @@ class GameScene extends Scene {
         this.graphics.lineTo(0, this.canvas.height);
         this.graphics.closePath();
         this.graphics.fillPath();
+    }
+
+    setUpdateModeCallback(callback) {
+        this.update_mode_callback = callback;
+    }
+
+    setAudioGenMethod(mode) {
+        this.audiogen_mode = mode;
     }
 };
 

@@ -9,10 +9,29 @@ let phaser = {
     canvas: null,
     game: null,
     scene: null
-}
+};
+
+let app_state = reactive({
+    edit_mode: true,
+    gen_method: 'text'
+});
 
 function onGameLoaded() {
     phaser.scene = phaser.game.scene.scenes[0];
+    phaser.scene.setUpdateModeCallback(onGameModeChange);
+}
+
+function onGameModeChange(mode) {
+    if (mode === 'edit') {
+        app_state.edit_mode = true;
+    }
+    else {
+        app_state.edit_mode = false;
+    }
+}
+
+function updateAudioGenMethod() {
+    phaser.scene.setAudioGenMethod(app_state.gen_method);
 }
 
 onMounted(() => {
@@ -47,12 +66,28 @@ onMounted(() => {
 <template>
     <div id="content">
         <canvas id="canvas"></canvas>
+        <div id="ui" v-if="app_state.edit_mode">
+            <label>Audio Generation Method:</label>
+            <input type="radio" name="gen-type" value="text" v-model="app_state.gen_method" checked @change="updateAudioGenMethod" />
+            <label>Text Description</label>
+            <input type="radio" name="gen-type" value="image" v-model="app_state.gen_method" @change="updateAudioGenMethod" />
+            <label>Image</label>
+        </div>
     </div>
 </template>
 
 <style scoped>
 * {
     font-size: 1rem;
+}
+
+label {
+    font-size: 1rem;
+    margin: 0;
+}
+
+input {
+    margin: 0 0 0 1rem;
 }
 
 #content {
@@ -65,5 +100,10 @@ onMounted(() => {
     width: 1024px;
     height: 576px;
     border: solid 1px #000000;;
+}
+
+#ui {
+    text-align: center;
+    margin: 1rem;
 }
 </style>
