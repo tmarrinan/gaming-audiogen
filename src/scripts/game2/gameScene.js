@@ -351,8 +351,21 @@ class GameScene extends Scene {
                     y: (editor_bounds.y_min + editor_bounds.y_max) / 2
                 };
 
+                let total_mass = 0.0;
+                let wheel_type = []
                 this.vehicle_description = [];
                 this.editor_vehicle.forEach((part) => {
+                    let part_properties = this.vehicle_parts[part.type][part.game_object.texture.key];
+                    if (part.type === 'wheels') {
+                        let wheel_text = '';
+                        if (part.game_object.texture.key === 'car-tire') wheel_text = 'car';
+                        else if (part.game_object.texture.key === 'wagon-wheel') wheel_text = 'wooden';
+                        else if (part.game_object.texture.key === 'inner-tube') wheel_text = 'inner-tube';
+                        if (!wheel_type.includes(wheel_text)) {
+                            wheel_type.push(wheel_text);
+                        }
+                    }
+                    total_mass += part_properties.mass;
                     let bounds = part.game_object.getBounds();
                     this.vehicle_description.push({
                         type: part.type,
@@ -368,7 +381,36 @@ class GameScene extends Scene {
                 console.log(this.vehicle_description);
 
                 // TODO: generate audio here... only clear assets and restart once audio received
+                let p = new Promise((resolve, reject) => {
+                    if (this.audiogen_mode === 'text') {
+                        let weight = 'light';
+                        if (total_mass > 6.0) {
+                            weight = 'moderate';
+                        }
+                        else if (total_mass > 15.0) {
+                            total_weight = 'heavy';
+                        }
+                        let wheel_desc = 'no';
+                        if (wheel_type.length > 0) {
+                            wheel_desc = wheel_type.join(' and ')
+                        }
+                        let audio_desc = weight + ' vehicle with ' + wheel_desc + ' wheels';
+                        resolve({type: 'text', text: audio_desc, image: null});
+                    }
+                    else if (this.audiogen_mode === 'text') {
 
+                    }
+                    else {
+                        reject('invalid AudioGen mode: ' + this.audiogen_mode);
+                    }
+                });
+
+                p.then((upload) => {
+                    console.log(upload);
+                })
+                .catch((err) => {
+                    console.log(err);
+                });
                 this.clearEditorAssets();
                 this.scene.restart();
 

@@ -43,18 +43,33 @@ def index():
 # POST: AudioGen
 @app.route('/audiogen', methods=['POST'])
 def generateAudio():
-    req_data = request.get_json()
-    return Response('Testing', mimetype='text/plain')
+    description = ''
+    req_data = request.get_json();
+    if req_data['type'] == 'text':
+        description = req_data['text']
+    else:
+        png_b64 = req_data['image'][22:]
+        png = base64.decodebytes(png_b64.encode('UTF-8'))
+        img = Image.open(io.BytesIO(png)).convert('RGB')
+        inputs = processor(img, return_tensors='pt').to(itt_cuda_device)
+        out = model.generate(**inputs)
+        description = processor.decode(out[0], skip_special_tokens=True)
+    print(f'Generating audio sound effect for "{description}"')
+    wav = audiogen_model.generate([description])
+    audio_write('audiogen', wav[0].cpu(), audiogen_model.sample_rate, strategy='loudness', loudness_compressor=True)
+    f_audio = open('audiogen.wav', 'rb')
+    audio = f_audio.read()
+    f_audio.close()
+    return Response(audio, mimetype='audio/wav')
 
 # POST: MusicGen
 @app.route('/musicgen', methods=['POST'])
 def generateMusic():
+    description = ''
     req_data = request.get_json()
     if req_data['type'] == 'text':
         description = req_data['text']
-        print(description)
     elif req_data['type'] == 'image':
-        description = 'No description available.'
         png_b64 = req_data['image'][22:]
         png = base64.decodebytes(png_b64.encode('UTF-8'))
         img = Image.open(io.BytesIO(png)).convert('RGB')
@@ -72,3 +87,4 @@ def generateMusic():
 
 if __name__ == '__main__':
     main()
+
