@@ -14,7 +14,7 @@ from audiocraft.data.audio import audio_write
 app = Flask(__name__, static_url_path='', static_folder='dist')
 
 # Initialize image-to-text processor
-itt_cuda_device = 'cpu'
+itt_cuda_device = 'cuda:1' #'cpu'
 processor = BlipProcessor.from_pretrained('Salesforce/blip-image-captioning-base')
 model = BlipForConditionalGeneration.from_pretrained('Salesforce/blip-image-captioning-base').to(itt_cuda_device)
 
@@ -24,6 +24,24 @@ audiogen_model.set_generation_params(duration=5)
 musicgen_model = MusicGen.get_pretrained('facebook/musicgen-small')
 musicgen_model.set_generation_params(duration=8)
 
+
+# Run server
+def main():
+    cert = os.path.join('keys', 'fullchain.pem')
+    key = os.path.join('keys', 'privkey.pem')
+    app.run(ssl_context=(cert, key), host='0.0.0.0', port=8008)
+
+
+# Home page
+@app.route('/')
+def index():
+    f = open(os.path.join('dist', 'index.html'), 'r', encoding='UTF-8')
+    home = f.read()
+    f.close()
+    return Response(home, mimetype='text/html')
+
+
+"""
 # Function to enhance descriptions with NLP
 def enhance_description_with_nlp(description):
     try:
@@ -53,6 +71,8 @@ def enhance_description_with_nlp(description):
     except Exception as e:
         print(f"Error in NLP enhancement: {str(e)}")
         return description  # Return original description if error occurs
+"""
+
 
 # Audio Generation Endpoint
 @app.route('/audiogen', methods=['POST'])
@@ -62,6 +82,7 @@ def generate_audio():
         if 'type' not in req_data or ('text' not in req_data and 'image' not in req_data):
             return jsonify({'error': 'Invalid request format'}), 400
         
+        description = ''
         if req_data['type'] == 'text':
             description = req_data['text']
         else:
@@ -71,8 +92,9 @@ def generate_audio():
             inputs = processor(img, return_tensors='pt').to(itt_cuda_device)
             out = model.generate(**inputs)
             basic_description = processor.decode(out[0], skip_special_tokens=True)
-            description = enhance_description_with_nlp(basic_description)
-        
+            description = basic_description
+            #description = enhance_description_with_nlp(basic_description)
+            
         print(f'Generating audio for: "{description}"')
         wav = audiogen_model.generate([description])
         audio_write('output_audiogen', wav[0].cpu(), audiogen_model.sample_rate, strategy='loudness', loudness_compressor=True)
@@ -80,7 +102,9 @@ def generate_audio():
             audio = f_audio.read()
         return Response(audio, mimetype='audio/wav')
     except Exception as e:
+        print(str(e))
         return jsonify({'error': str(e)}), 500
+
 
 # Music Generation Endpoint
 @app.route('/musicgen', methods=['POST'])
@@ -90,6 +114,7 @@ def generate_music():
         if 'type' not in req_data or ('text' not in req_data and 'image' not in req_data):
             return jsonify({'error': 'Invalid request format'}), 400
         
+        description = ''
         if req_data['type'] == 'text':
             description = req_data['text']
         else:
@@ -107,21 +132,10 @@ def generate_music():
             audio = f_audio.read()
         return Response(audio, mimetype='audio/wav')
     except Exception as e:
+        print(str(e))
         return jsonify({'error': str(e)}), 500
-# Run server
-def main():
-    app.run(host='0.0.0.0', port=8008)
 
-
-# Home Page Endpoint
-@app.route('/')
-def index():
-    try:
-        with open(os.path.join('dist', 'index.html'), 'r', encoding='UTF-8') as f:
-            home = f.read()
-        return Response(home, mimetype='text/html')
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     main()
+

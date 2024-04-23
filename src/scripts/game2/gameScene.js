@@ -332,14 +332,18 @@ class GameScene extends Scene {
     onPointerDown(pointer) {
         if (this.edit_mode) {
             if (this.play_button.getBounds().contains(pointer.x, pointer.y)) {
-                this.edit_mode = false;
-
                 let editor_bounds = {x_min: 9999, x_max: -9999, y_min: 9999, y_max: -9999};
+                let part_center_bounds = {x_min: 9999, x_max: -9999, y_min: 9999, y_max: -9999}; 
                 this.editor_vehicle.forEach((part) => {
-                    if (part.game_object.x < editor_bounds.x_min) editor_bounds.x_min = part.game_object.x;
-                    if (part.game_object.x > editor_bounds.x_max) editor_bounds.x_max = part.game_object.x;
-                    if (part.game_object.y < editor_bounds.y_min) editor_bounds.y_min = part.game_object.y;
-                    if (part.game_object.y > editor_bounds.y_max) editor_bounds.y_max = part.game_object.y;
+                    let bounds = part.game_object.getBounds();
+                    if (bounds.left < editor_bounds.x_min) editor_bounds.x_min = bounds.left;
+                    if (bounds.right > editor_bounds.x_max) editor_bounds.x_max = bounds.right;
+                    if (bounds.top < editor_bounds.y_min) editor_bounds.y_min = bounds.top;
+                    if (bounds.bottom > editor_bounds.y_max) editor_bounds.y_max = bounds.bottom;
+                    if (part.game_object.x < part_center_bounds.x_min) part_center_bounds.x_min = part.game_object.x;
+                    if (part.game_object.x > part_center_bounds.x_max) part_center_bounds.x_max = part.game_object.x;
+                    if (part.game_object.y < part_center_bounds.y_min) part_center_bounds.y_min = part.game_object.y;
+                    if (part.game_object.y > part_center_bounds.y_max) part_center_bounds.y_max = part.game_object.y;
                     // let bounds = part.game_object.getBounds();
                     // if (bounds.x < editor_bounds.x_min) editor_bounds.x_min = bounds.x;
                     // if (bounds.x + bounds.width > editor_bounds.x_max) editor_bounds.x_max = bounds.x + bounds.width;
@@ -347,8 +351,8 @@ class GameScene extends Scene {
                     // if (bounds.y + bounds.height > editor_bounds.y_max) editor_bounds.y_max = bounds.y + bounds.height;
                 });
                 let center_pos = {
-                    x: (editor_bounds.x_min + editor_bounds.x_max) / 2, 
-                    y: (editor_bounds.y_min + editor_bounds.y_max) / 2
+                    x: (part_center_bounds.x_min + part_center_bounds.x_max) / 2, 
+                    y: (part_center_bounds.y_min + part_center_bounds.y_max) / 2
                 };
 
                 let total_mass = 0.0;
@@ -378,7 +382,6 @@ class GameScene extends Scene {
                         height: Math.round(bounds.height / 2)
                     });
                 });
-                console.log(this.vehicle_description);
 
                 // TODO: generate audio here... only clear assets and restart once audio received
                 let p = new Promise((resolve, reject) => {
@@ -397,8 +400,14 @@ class GameScene extends Scene {
                         let audio_desc = weight + ' vehicle with ' + wheel_desc + ' wheels';
                         resolve({type: 'text', text: audio_desc, image: null});
                     }
-                    else if (this.audiogen_mode === 'text') {
-
+                    else if (this.audiogen_mode === 'image') {
+                        let x = editor_bounds.x_min - 10;
+                        let y = editor_bounds.y_min - 10;
+                        let w = editor_bounds.x_max - editor_bounds.x_min + 20;
+                        let h = editor_bounds.y_max - editor_bounds.y_min + 20;
+                        this.renderer.snapshotArea(x, y, w, h, (image) => {
+                            resolve({type: 'image', text: null, image: image.src});
+                        }, 'image/png');
                     }
                     else {
                         reject('invalid AudioGen mode: ' + this.audiogen_mode);
@@ -407,14 +416,29 @@ class GameScene extends Scene {
 
                 p.then((upload) => {
                     console.log(upload);
+                    let options = {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(upload),
+                        method: 'POST'
+                    };
+                    return fetch('/audiogen', options);
+                })
+                .then((response) => {
+                    return response.blob();
+                })
+                .then((data) => {
+                    const audio_url = URL.createObjectURL(data);
+
+                    this.edit_mode = false;
+                    this.clearEditorAssets();
+                    this.scene.restart();
+                    if (this.update_mode_callback !== null) this.update_mode_callback('play');
                 })
                 .catch((err) => {
                     console.log(err);
                 });
-                this.clearEditorAssets();
-                this.scene.restart();
-
-                if (this.update_mode_callback !== null) this.update_mode_callback('play');
             }
             else {
                 let selection = false;
