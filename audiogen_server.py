@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template_string, url_for
+from flask import Flask, request, render_template_string
 import os
 import io
 import torchaudio
@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 # Initialize the AudioGen model globally to avoid reloading it on each request
 model = AudioGen.get_pretrained('facebook/audiogen-medium')
-model.set_generation_params(duration=5)  # generate 5 seconds.
+model.set_generation_params(duration=5)  # Generate 5 seconds of audio.
 
 @app.route('/')
 def index():
@@ -59,14 +59,17 @@ def generate_audio():
         # Serve a webpage with an audio player for the generated audio
         return render_template_string('''
             <html>
-                <body>
-                    <h2>Generated Audio:</h2>
-                    <audio controls>
-                        <source src="{{ data_url }}" type="audio/wav">
-                        Your browser does not support the audio element.
-                    </audio>
-                    <p><a href="/">Generate another audio</a></p>
-                </body>
+            <head>
+                <title>Generated Audio</title>
+            </head>
+            <body>
+                <h2>Generated Audio:</h2>
+                <audio controls>
+                    <source src="{{ data_url }}" type="audio/wav">
+                    Your browser does not support the audio element.
+                </audio>
+                <p><a href="/">Generate another audio</a></p>
+            </body>
             </html>
         ''', data_url=data_url)
     else:
