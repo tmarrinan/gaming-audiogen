@@ -52,6 +52,7 @@ class GameScene extends Scene {
         this.edit_mode = true;
         this.update_mode_callback = null;
         this.audiogen_mode = 'text';
+        this.audio = null;
         this.cursors = null;
         this.play_button = null;
         this.vehicle_parts = {
@@ -89,6 +90,8 @@ class GameScene extends Scene {
         this.load.image('cinder-block', 'assets/cinder-block.png');
         this.load.image('skis', 'assets/skis.png');
         this.load.image('computer', 'assets/computer.png');
+
+        this.load.audio('audio-custom', ['assets/default_vehicle.mp3']);
     }
   
     create() {
@@ -247,6 +250,10 @@ class GameScene extends Scene {
             };
             this.edit_button = this.add.text(this.canvas.width - 20, 20, 'Edit', font);
             this.edit_button.setOrigin(1.0, 0.0);
+
+            this.audio = this.sound.add('audio-custom');
+            this.audio.loop = true;
+            this.audio.play();
 
             //let center_of_mass = Matter.Vector.sub(body_physics.body.bounds.min, body_physics.body.position);
             // console.log(center_of_mass);
@@ -431,10 +438,19 @@ class GameScene extends Scene {
                 .then((data) => {
                     const audio_url = URL.createObjectURL(data);
 
-                    this.edit_mode = false;
-                    this.clearEditorAssets();
-                    this.scene.restart();
-                    if (this.update_mode_callback !== null) this.update_mode_callback('play');
+                    if (this.cache.audio.exists('audio-custom')) {
+                        this.cache.audio.remove('audio-custom');
+                    }
+                    this.load.audio('audio-custom', [audio_url]);
+                    this.load.start();
+
+                    // wait 0.25 sec to ensure audio has loaded
+                    setTimeout(() => {
+                        this.edit_mode = false;
+                        this.clearEditorAssets();
+                        this.scene.restart();
+                        if (this.update_mode_callback !== null) this.update_mode_callback('play');
+                    }, 250);
                 })
                 .catch((err) => {
                     console.log(err);
@@ -508,6 +524,7 @@ class GameScene extends Scene {
     }
 
     clearGameAssets() {
+        this.audio.destroy();
         this.graphics.destroy();
 
         for (let body of this.terrain_bodies) {
