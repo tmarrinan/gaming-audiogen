@@ -413,7 +413,7 @@ class GameScene extends Scene {
                         let w = editor_bounds.x_max - editor_bounds.x_min + 20;
                         let h = editor_bounds.y_max - editor_bounds.y_min + 20;
                         this.renderer.snapshotArea(x, y, w, h, (image) => {
-                            resolve({type: 'image', text: null, image: image.src});
+                            resolve({type: 'image', text: 'vehicle', image: image.src});
                         }, 'image/png');
                     }
                     else {

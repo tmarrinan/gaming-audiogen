@@ -89,7 +89,11 @@ def generate_audio():
             png_b64 = req_data['image'][22:]
             png = base64.decodebytes(png_b64.encode('UTF-8'))
             img = Image.open(io.BytesIO(png)).convert('RGB')
-            inputs = processor(img, return_tensors='pt').to(itt_cuda_device)
+            inputs = None
+            if 'text' in req_data:
+                processor(img, req_data['text'], return_tensors='pt').to(itt_cuda_device)
+            else:
+                processor(img, return_tensors='pt').to(itt_cuda_device)
             out = model.generate(**inputs)
             basic_description = processor.decode(out[0], skip_special_tokens=True)
             description = basic_description
